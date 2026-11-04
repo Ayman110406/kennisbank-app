@@ -87,6 +87,11 @@ h2.sec a { text-decoration: none; }
 .statline .rb.spin svg { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .statline .rb.spin svg { animation: none; } }
+.donebar { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 14px 0; cursor: pointer; }
+.donebar .check { width: 30px; height: 30px; }
+.donebar .check svg { width: 17px; height: 17px; }
+.donebar b { display: block; font-size: 15.5px; } .donebar .main span { color: var(--muted); font-size: 13px; }
+.donebar.on { border-color: var(--done); background: var(--done-bg); }
 .ring { display: flex; align-items: center; gap: 18px; }
 .ring svg { width: 92px; height: 92px; flex: none; transform: rotate(-90deg); }
 .ring circle { fill: none; stroke-width: 7; } .ring .bg { stroke: var(--chip); } .ring .fg { stroke: var(--done); stroke-linecap: round; }
@@ -182,7 +187,7 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T07:16Z";
+const BUILD = "2026-11-04T07:32Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -257,7 +262,7 @@ function includeFile(p) {
   return !["11-templates", "9-export", "10-inbox"].includes(top) && !top.startsWith(".");
 }
 
-const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0 };
+const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0, pending: store.get("lezer.pending", {}) };
 function ingest(files) {
   S.docs = Object.keys(files).filter(includeFile).sort().map(p => parseDoc(p, files[p]));
   S.byPath = {}; S.bySlug = {};
@@ -266,6 +271,7 @@ function ingest(files) {
     .sort((a, b) => ord(a) - ord(b) || a.title.localeCompare(b.title));
   S.byTitle = {};
   for (const t of S.topics) S.byTitle[t.title.toLowerCase()] = t;
+  for (const [p, v] of Object.entries(S.pending || {})) if (S.byPath[p]) S.byPath[p].fm.behandeld = v.to;
 }
 const ord = d => { const n = Number(d.fm.volgorde); return isFinite(n) && d.fm.volgorde !== "" ? n : 1e9; };
 const isDone = d => d.fm.behandeld === true;
@@ -389,7 +395,60 @@ function stats() {
 }
 const clock = () => new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
 const buildLabel = () => { const d = new Date(BUILD); return isNaN(d) ? "ontwikkelversie" : d.toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); };
-const SYNC_MS = 10 * 60 * 1000;
+const SYNC_MS = 10 * 60 * 1000, WRITE_DELAY = 5 * 60 * 1000;
+let flushTimer = null;
+const pendingN = () => Object.keys(S.pending).length;
+function savePending() { if (pendingN()) store.set("lezer.pending", S.pending); else store.del("lezer.pending"); }
+function scheduleFlush() {
+  clearTimeout(flushTimer); if (!pendingN() || SNAPSHOT) return;
+  const last = Math.max(...Object.values(S.pending).map(p => p.at));
+  flushTimer = setTimeout(flushPending, Math.max(1000, last + WRITE_DELAY - Date.now()));
+}
+function toggleDone(slug) {
+  const d = S.bySlug[slug]; if (!d || SNAPSHOT) return;
+  const to = !isDone(d), p = S.pending[d.path], from = p ? p.from : isDone(d);
+  if (to === from) delete S.pending[d.path]; else S.pending[d.path] = { to, from, at: Date.now() };
+  d.fm.behandeld = to; savePending(); scheduleFlush();
+  const y = window.scrollY; route(); window.scrollTo(0, y);
+}
+const setBehandeld = (text, to) => {
+  const m = text.match(/^---\r?\n[\s\S]*?\r?\n---/); if (!m || !/^behandeld:/m.test(m[0])) return null;
+  return m[0].replace(/^behandeld:[^\r\n]*/m, "behandeld: " + to) + text.slice(m[0].length);
+};
+async function flushPending() {
+  clearTimeout(flushTimer);
+  const cfg = store.get("lezer.cfg", {}), items = Object.entries(S.pending);
+  if (!items.length || S.flushing || !cfg.token || SNAPSHOT) return;
+  S.flushing = true; refreshStatus();
+  const enc = encodeURIComponent;
+  try {
+    for (let attempt = 0; ; attempt++) {
+      const head = (await gh(cfg, `/repos/${cfg.repo}/git/ref/heads/${enc(cfg.branch)}`)).object.sha;
+      const base = (await gh(cfg, `/repos/${cfg.repo}/git/commits/${head}`)).tree.sha;
+      const tree = [];
+      for (const [path, p] of items) {
+        const text = await gh(cfg, `/repos/${cfg.repo}/contents/${path.split("/").map(enc).join("/")}?ref=${head}`, "application/vnd.github.raw+json");
+        const next = setBehandeld(text, p.to);
+        if (next == null) throw new Error("Opslaan niet gelukt: geen regel 'behandeld:' in " + path);
+        if (next !== text) tree.push({ path, mode: "100644", type: "blob", content: next });
+      }
+      if (tree.length) {
+        const names = items.filter(([path]) => tree.some(t => t.path === path)).map(([path, p]) => (S.byPath[path] ? S.byPath[path].title : path) + (p.to ? "" : " (terug)"));
+        const message = "Behandeld: " + (names.length > 3 ? names.slice(0, 3).join(", ") + " en " + (names.length - 3) + " andere" : names.join(", "));
+        const nt = await ghw(cfg, "POST", "/git/trees", { base_tree: base, tree });
+        const nc = await ghw(cfg, "POST", "/git/commits", { message, tree: nt.sha, parents: [head] });
+        try { await ghw(cfg, "PATCH", `/git/refs/heads/${enc(cfg.branch)}`, { sha: nc.sha }); }
+        catch (e) { if (e.status === 422 && attempt < 2) continue; throw e; }
+      }
+      break;
+    }
+    for (const [path, p] of items) if (S.pending[path] && S.pending[path].at === p.at) delete S.pending[path];
+    savePending(); pill("Opgeslagen in GitHub", 2500);
+    loadLive(true, true);
+    S.writeErr = "";
+  } catch (e) { S.writeErr = e.message; pill(e.message, 7000); flushTimer = setTimeout(flushPending, WRITE_DELAY); }
+  finally { S.flushing = false; refreshStatus(); scheduleFlush(); }
+}
 const REFRESH_SVG = '<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>';
 function statusHtml() {
   if (S.meta.mode === "snapshot") return `<div class="statline" id="status"><div class="t"><span><i class="dot"></i>Momentopname van ${esc(fmtDate(S.meta.date, true))}</span></div></div>`;
@@ -397,9 +456,11 @@ function statusHtml() {
   const kb = `<span><i class="dot ${S.meta.when && S.meta.when !== "uit cache" ? "ok" : ""}"></i>Kennisbank ${S.meta.when === "uit cache" ? "uit cache" : "bijgewerkt " + esc(S.meta.when || "…")}</span>`;
   const [txt, cls] = { check: ["wordt gecontroleerd…", ""], ok: ["up-to-date", "ok"], nieuw: ["nieuwe versie beschikbaar", "warn"], fout: ["controle mislukt" + (a.err ? " (" + a.err + ")" : ""), ""] }[a.state];
   const app = `<span><i class="dot ${cls}"></i>App ${txt}${a.checked && a.state !== "check" ? " · " + esc(a.checked) : ""}</span>`;
+  const np = Object.keys(S.pending).length;
+  const pend = np || S.flushing ? `<span><i class="dot warn"></i>${S.flushing ? "opslaan…" : S.writeErr ? "opslaan mislukt, " + np + (np === 1 ? " wijziging" : " wijzigingen") + " wachten" : np + (np === 1 ? " wijziging" : " wijzigingen") + " nog niet opgeslagen"}</span>` : "";
   const btn = a.state === "nieuw" ? '<button class="rb hot" data-act="updateapp">Vernieuw app</button>'
     : `<button class="rb ${S.syncing ? "spin" : ""}" data-act="syncnow" aria-label="Ververs">${REFRESH_SVG}</button>`;
-  return `<div class="statline" id="status"><div class="t">${kb}${app}</div>${btn}</div>`;
+  return `<div class="statline" id="status"><div class="t">${kb}${app}${pend}</div>${btn}</div>`;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function fetchMainBuild() {
@@ -423,11 +484,11 @@ async function checkApp() {
   refreshStatus();
 }
 function refreshStatus() { const el = $("#status"); if (el) el.outerHTML = statusHtml(); }
-async function syncAll(silent) {
+async function syncAll(silent, noFlush) {
   if (SNAPSHOT || S.syncing) return;
   S.syncing = true; refreshStatus();
-  try { await Promise.all([loadLive(true, silent), checkApp()]); }
-  finally { S.syncing = false; S.lastSync = Date.now(); refreshStatus(); }
+  try { if (!silent && !noFlush) await flushPending(); await Promise.all([loadLive(true, silent), checkApp()]); }
+  finally { S.syncing = false; S.lastSync = Date.now(); refreshStatus(); if (!silent && S.writeErr) pill(S.writeErr, 7000); }
 }
 function viewStart() {
   const st = stats();
@@ -630,7 +691,7 @@ function viewInstellingen() {
   else live = `<h2 class="sec">Verbinding met GitHub</h2><div class="card">
       <label class="f" for="repo" style="margin-top:0">Repository</label><input id="repo" type="text" value="${esc(cfg.repo || DEFAULT_REPO)}" autocapitalize="off" autocomplete="off">
       <label class="f" for="branch">Branch</label><input id="branch" type="text" value="${esc(cfg.branch || "main")}" autocapitalize="off" autocomplete="off">
-      <label class="f" for="token">Token (alleen lezen)</label><input id="token" type="password" value="" placeholder="${cfg.token ? "opgeslagen, leeg laten om te behouden" : "github_pat_…"}" autocomplete="off">
+      <label class="f" for="token">Token (lezen en schrijven)</label><input id="token" type="password" value="" placeholder="${cfg.token ? "opgeslagen, leeg laten om te behouden" : "github_pat_…"}" autocomplete="off">
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><button class="btn" data-act="saveCfg">Opslaan en laden</button><button class="btn ghost" data-act="reload">Opnieuw laden</button><button class="btn ghost" data-act="clearCfg">Token wissen</button></div></div>`;
   return { html: `<h1 class="page">Instellingen</h1><h2 class="sec">Weergave</h2><div class="seg" role="group" aria-label="Thema">${seg("auto", "Automatisch")}${seg("light", "Licht")}${seg("dark", "Donker")}</div>${live}` };
 }
@@ -655,6 +716,11 @@ function parentOf(d) {
   return "v-start";
 }
 function factRow(k, v) { return v === "" || v == null || (Array.isArray(v) && !v.length) ? "" : `<dt>${k}</dt><dd>${v}</dd>`; }
+function doneBar(d) {
+  if (SNAPSHOT || !S.topics.includes(d)) return "";
+  const on = isDone(d), pend = !!S.pending[d.path];
+  return `<button class="donebar ${on ? "on" : ""}" data-act="toggledone" data-slug="${d.slug}" aria-pressed="${on}"><span class="check ${on ? "on" : ""}">${icon("check")}</span><span class="main"><b>${on ? "Behandeld" : "Nog niet behandeld"}</b><span>${pend ? "wordt opgeslagen…" : on ? "tik om terug te zetten" : "tik als je dit onderwerp hebt doorgenomen"}</span></span></button>`;
+}
 function viewDoc(d) {
   const f = d.fm, isTopic = S.topics.includes(d);
   let head = "", tail = "";
@@ -687,7 +753,7 @@ function viewDoc(d) {
         ${(f.zwak && f.zwak.length) ? `<p class="sn" style="margin:0 0 6px">Zwak</p><div class="chips" style="margin-bottom:10px">${f.zwak.map(x => `<span class="chip open">${esc(x)}</span>`).join("")}</div>` : ""}`;
     }
   }
-  return { html: `<p class="kicker">${esc(where)}</p><h1 class="page">${esc(d.title)}</h1>${head}<article class="prose" style="margin-top:18px">${md(d.body, d)}</article>${tail}`, parent: parentOf(d), title: kindLabel(d) };
+  return { html: `<p class="kicker">${esc(where)}</p><h1 class="page">${esc(d.title)}</h1>${head}${doneBar(d)}<article class="prose" style="margin-top:18px">${md(d.body, d)}</article>${doneBar(d)}${tail}`, parent: parentOf(d), title: kindLabel(d) };
 }
 
 /* ---------- router ---------- */
@@ -735,6 +801,7 @@ document.addEventListener("click", e => {
   else if (act === "saveCfg") saveCfg();
   else if (act === "reload") { loadLive(true); }
   else if (act === "syncnow") { syncAll(false); }
+  else if (act === "toggledone") { toggleDone(b.dataset.slug); }
   else if (act === "updateapp") { location.href = location.pathname + "?v=" + Date.now(); }
   else if (act === "clearCfg") { store.del("lezer.cfg"); idbDel("docs"); S.setup = true; S.docs = []; route(); }
 });
@@ -763,14 +830,24 @@ function saveCfg() {
   if (!cfg.token) { pill("Plak eerst een token.", 3000); return; }
   store.set("lezer.cfg", cfg); S.setup = false; loadLive(true);
 }
+const httpErr = (status, msg) => Object.assign(new Error(msg), { status });
+async function ghw(cfg, method, path, body) {
+  let r;
+  try { r = await fetch((cfg.apiBase || "https://api.github.com") + `/repos/${cfg.repo}` + path, { method, headers: { Authorization: "Bearer " + cfg.token, Accept: "application/vnd.github+json", "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28" }, body: JSON.stringify(body) }); }
+  catch (e) { throw httpErr(0, "Geen verbinding met GitHub."); }
+  if (r.status === 401) throw httpErr(401, "Het token is ongeldig of verlopen.");
+  if (r.status === 403 || r.status === 404) throw httpErr(r.status, "Opslaan niet gelukt: het token mist schrijfrechten. Zet bij het token Contents op Read and write.");
+  if (!r.ok) throw httpErr(r.status, "Opslaan niet gelukt (GitHub fout " + r.status + ").");
+  return r.json();
+}
 async function gh(cfg, path, accept) {
   const base = cfg.apiBase || "https://api.github.com";
   let r;
   try { r = await fetch(base + path, { headers: { Authorization: "Bearer " + cfg.token, Accept: accept || "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" } }); }
   catch (e) { throw new Error("Geen verbinding met GitHub."); }
-  if (r.status === 401) throw new Error("Het token is ongeldig of verlopen.");
-  if (r.status === 403 || r.status === 404) throw new Error("Geen toegang tot " + cfg.repo + ". Controleer de repository en de rechten van het token.");
-  if (!r.ok) throw new Error("GitHub gaf fout " + r.status + ".");
+  if (r.status === 401) throw httpErr(401, "Het token is ongeldig of verlopen.");
+  if (r.status === 403 || r.status === 404) throw httpErr(r.status, "Geen toegang tot " + cfg.repo + ". Controleer de repository en de rechten van het token.");
+  if (!r.ok) throw httpErr(r.status, "GitHub gaf fout " + r.status + ".");
   return accept && accept.includes("raw") ? r.text() : r.json();
 }
 async function loadLive(force, silent) {
@@ -819,7 +896,10 @@ async function boot() {
   if (!cfg.token) { S.setup = true; route(); return; }
   const cached = await idbGet("docs:" + cfg.repo + "@" + cfg.branch);
   if (cached) { ingest(cached.files); S.meta = { mode: "live", when: "uit cache" }; route(); }
-  await syncAll(false);
+  await syncAll(false, true);
+  scheduleFlush();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushPending(); });
+  window.addEventListener("pagehide", () => { flushPending(); });
   setInterval(() => { if (document.visibilityState === "visible") syncAll(true); }, SYNC_MS);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && Date.now() - (S.lastSync || 0) >= SYNC_MS) syncAll(true); });
 }
