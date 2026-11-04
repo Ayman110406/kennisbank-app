@@ -180,6 +180,45 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 .pct { font-variant-numeric: tabular-nums; font-weight: 600; width: 52px; text-align: right; flex: none; }
 .sn { font-size: 12.5px; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) { .meter b { transition: width .4s ease; } }
+
+/* toets maken */
+:root { --bad: #B3261E; --bad-bg: #FBE4E1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bad: #F0928A; --bad-bg: #3B1815; } }
+:root[data-theme="dark"] { --bad: #F0928A; --bad-bg: #3B1815; }
+.chip.bad { background: var(--bad-bg); color: var(--bad); font-weight: 600; }
+.btn[disabled] { opacity: .4; cursor: default; }
+.tcta, .tbig { width: 100%; min-height: 50px; font-size: 16px; }
+.qbar { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; margin: 6px 0; }
+.qbar b { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+.qmeta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.qlink { font: inherit; font-size: 13px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 8px 0 8px 12px; cursor: pointer; }
+.qstem { font-size: 17.5px; line-height: 1.5; margin: 12px 0 16px; overflow-wrap: anywhere; }
+.qstem code, .qopt code, .qres code { font-family: var(--f-mono); font-size: .85em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.qopts { display: flex; flex-direction: column; gap: 8px; }
+.qopt { display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%; font: inherit; color: inherit; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; min-height: 52px; cursor: pointer; overflow-wrap: anywhere; }
+.qopt .k { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.qopt.multi .k { border-radius: 7px; }
+.qopt[aria-pressed="true"] { border-color: var(--accent); background: var(--chip); }
+.qopt[aria-pressed="true"] .k { background: var(--accent); color: var(--accent-ink); }
+#tin { width: 100%; font: inherit; font-size: 16px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+textarea#tin { resize: vertical; line-height: 1.45; }
+.qnav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0; }
+.qnav .btn { min-height: 48px; }
+.qdots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.qd { font: inherit; font-weight: 600; min-height: 44px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.qd.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tbanner { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); margin: 10px 0 14px; font-size: 14px; }
+.tbanner span { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; } .tbanner .mono { font-family: var(--f-mono); font-size: 11.5px; }
+.tbanner.ok { background: var(--done-bg); border-color: var(--done); } .tbanner.ok b { color: var(--done); }
+.tbanner.bad { background: var(--bad-bg); border-color: var(--bad); } .tbanner.bad b { color: var(--bad); }
+.tscore .big { font-size: 34px; font-weight: 700; } .tscore .big small { font-size: 16px; color: var(--muted); font-weight: 500; }
+.tscore .sub { color: var(--muted); font-size: 13px; }
+.qres .qh { display: flex; align-items: center; gap: 8px; } .qres .qh .pts { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px; }
+.qres .qs { font-size: 15px; overflow-wrap: anywhere; }
+.qres .lbl { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 4px; }
+.qres .ans { padding: 8px 10px; border-radius: 8px; background: var(--chip); font-size: 14.5px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.qres .ans.g { background: var(--done-bg); } .qres .ans.f { background: var(--bad-bg); }
+.qres .ex { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
 </style>
 
 <div class="wrap" id="app"></div>
@@ -187,7 +226,7 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T07:53Z";
+const BUILD = "2026-11-04T21:00Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -264,6 +303,8 @@ function includeFile(p) {
 
 const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0, saved: {}, pending: store.get("lezer.pending", {}) };
 function ingest(files) {
+  S.files = files; files = Object.assign({}, files);
+  for (const [p, tx] of Object.entries(S.newFiles || {})) { if (p in files) delete S.newFiles[p]; else files[p] = tx; }
   S.docs = Object.keys(files).filter(includeFile).sort().map(p => parseDoc(p, files[p]));
   S.byPath = {}; S.bySlug = {};
   for (const d of S.docs) { S.byPath[d.path] = d; S.bySlug[d.slug] = d; }
@@ -507,7 +548,7 @@ function viewStart() {
   const pc = (a, b) => b ? Math.round(100 * a / b) : 0;
   const toetsRow = t => {
     const last = t.pogingen[t.pogingen.length - 1], pcts = t.scores.filter(v => v != null), lastPct = pcts[pcts.length - 1];
-    const wacht = last.fm.status === "ingeleverd";
+    const wacht = t.pogingen.some(p => p.fm.status === "ingeleverd");
     return `<a class="row" href="#${t.toets.slug}"><span class="main"><span class="t">${esc(t.toets.title)}</span><br><span class="m">${t.pogingen.length} ${t.pogingen.length === 1 ? "poging" : "pogingen"}${lastPct != null ? " · laatste " + Math.round(lastPct) + "%" : ""}${last.fm.datum ? " · " + esc(fmtDate(last.fm.datum)) : ""}</span></span>${wacht ? '<span class="flag">nakijken</span>' : ""}</a>`;
   };
   const doelRow = d => `<a class="row" href="#${d.slug}"><span class="main"><span class="t">${esc(d.title)}</span>${d.fm.streefdatum ? `<br><span class="m">streefdatum ${esc(fmtDate(d.fm.streefdatum))}</span>` : ""}</span></a>`;
@@ -669,10 +710,10 @@ function viewToetsen() {
   let h = `<h1 class="page">Toetsen</h1>`;
   if (!ts.length) return { html: h + '<div class="empty"><b>Nog geen toetsen</b>Maak er een in een chat met Claude. Hij verschijnt hier met je scores per poging en de thema\'s die vaak fout gaan.</div>' };
   return { html: h + `<div class="stack" style="margin-top:14px">${ts.map(t => {
-    const last = t.scores.filter(v => v != null).slice(-1)[0];
-    return `<a class="card" href="#${t.toets.slug}" style="text-decoration:none;color:inherit"><div class="t" style="font-weight:600">${esc(t.toets.title)}</div>
-      <div class="sn">${t.pogingen.length} ${t.pogingen.length === 1 ? "poging" : "pogingen"}${last != null ? " · laatste " + Math.round(last) + "%" : ""}${t.toets.fm.versie ? " · versie " + esc(t.toets.fm.versie) : ""}</div>
-      ${spark(t.scores)}${themeList(t)}</a>`; }).join("")}</div>` };
+    const last = t.scores.filter(v => v != null).slice(-1)[0], wacht = t.pogingen.filter(p => p.fm.status === "ingeleverd").length;
+    return `<div class="stack" style="gap:8px"><a class="card" href="#${t.toets.slug}" style="text-decoration:none;color:inherit"><div class="t" style="font-weight:600">${esc(t.toets.title)}</div>
+      <div class="sn">${t.pogingen.length} ${t.pogingen.length === 1 ? "poging" : "pogingen"}${last != null ? " · laatste " + Math.round(last) + "%" : ""}${wacht ? " · " + wacht + " nakijken" : ""}${t.toets.fm.versie ? " · versie " + esc(t.toets.fm.versie) : ""}</div>
+      ${spark(t.scores)}${themeList(t)}</a>${tBtn(t)}</div>`; }).join("")}</div>` };
 }
 function viewOver() {
   const st = stats(), shown = S.commits.filter(c => !SITE_PREFIXES.some(p => c.msg.startsWith(p)));
@@ -745,19 +786,262 @@ function viewDoc(d) {
   } else if (d.section === "7-toetsen") {
     const t = toetsData().find(x => d.path.startsWith("7-toetsen/" + x.folder + "/"));
     if (/\/toets\.md$/.test(d.path) && t) {
-      head = `<div class="card" style="margin:14px 0">${spark(t.scores) || '<span class="sn">Nog geen pogingen</span>'}${themeList(t)}</div>
+      head = `${tBtn(t)}<div class="card" style="margin:14px 0">${spark(t.scores) || '<span class="sn">Nog geen pogingen</span>'}${themeList(t)}</div>
         ${t.pogingen.length ? `<h2 class="sec" style="margin-top:8px">Pogingen</h2><div class="card pad0 list" style="margin-bottom:20px">${t.pogingen.slice().reverse().map(p => {
           const v = parseFloat(String(p.fm.percentage).replace(",", "."));
-          return `<a class="row" href="#${p.slug}"><span class="main"><span class="t">${esc(fmtDate(p.fm.datum, true))}</span><br><span class="m">${esc(p.fm.status || "")}${p.fm.duur ? " · " + esc(p.fm.duur) + " min" : ""}</span></span>
-            ${isFinite(v) ? `<span class="bar"><b style="width:${Math.max(0, Math.min(100, v))}%"></b></span><span class="pct">${Math.round(v)}%</span>` : '<span class="chip">na te kijken</span>'}</a>`; }).join("")}</div>` : ""}`;
+          return `<a class="row" href="#${p.slug}"><span class="main"><span class="t">${esc(fmtDate(p.fm.datum, true))}</span><br><span class="m">${esc(p.fm.status || "")}${p.fm.duur ? " · " + esc(p.fm.duur) + " min" : ""}${!isFinite(v) && p.fm.score_automatisch !== "" && p.fm.score_automatisch != null ? " · automatisch " + esc(p.fm.score_automatisch) : ""}</span></span>
+            ${isFinite(v) ? `<span class="bar"><b style="width:${Math.max(0, Math.min(100, v))}%"></b></span><span class="pct">${Math.round(v)}%</span>` : '<span class="flag">nakijken</span>'}</a>`; }).join("")}</div>` : ""}`;
     } else if (/pogingen\//.test(d.path)) {
-      head = `<div class="card" style="margin:14px 0"><dl class="kv">${factRow("Datum", esc(fmtDate(f.datum, true)))}${factRow("Score", f.score !== "" && f.score != null ? esc(f.score) + (f.maximaal ? " van " + esc(f.maximaal) : "") : "")}${factRow("Percentage", f.percentage !== "" ? esc(f.percentage) + "%" : "")}${factRow("Status", esc(f.status))}${factRow("Toetsversie", esc(f.toetsversie))}</dl></div>
+      head = `<div class="card" style="margin:14px 0"><dl class="kv">${factRow("Datum", esc(fmtDate(f.datum, true)))}${factRow("Score", f.score !== "" && f.score != null ? esc(f.score) + (f.maximaal ? " van " + esc(f.maximaal) : "") : "")}${factRow("Automatisch", f.score_automatisch !== "" && f.score_automatisch != null ? esc(f.score_automatisch) : "")}${factRow("Percentage", f.percentage !== "" && f.percentage != null ? esc(f.percentage) + "%" : "")}${factRow("Status", esc(f.status))}${factRow("Toetsversie", esc(f.toetsversie))}</dl></div>
         ${(f.sterk && f.sterk.length) ? `<p class="sn" style="margin:0 0 6px">Sterk</p><div class="chips" style="margin-bottom:10px">${f.sterk.map(x => `<span class="chip done">${esc(x)}</span>`).join("")}</div>` : ""}
         ${(f.zwak && f.zwak.length) ? `<p class="sn" style="margin:0 0 6px">Zwak</p><div class="chips" style="margin-bottom:10px">${f.zwak.map(x => `<span class="chip open">${esc(x)}</span>`).join("")}</div>` : ""}`;
     }
   }
   return { html: `<p class="kicker">${esc(where)}</p><h1 class="page">${esc(d.title)}</h1>${head}${doneBar(d)}<article class="prose" style="margin-top:18px">${md(d.body, d)}</article>${doneBar(d)}${tail}`, parent: parentOf(d), title: kindLabel(d) };
 }
+
+/* ---------- toetsen maken ---------- */
+const TOETS_KEY = f => "lezer.toets." + f;
+const r2 = n => Math.round(n * 100) / 100;
+const nf = n => String(r2(n));                       // bestand: punt als decimaal
+const nl = n => nf(n).replace(".", ",");             // scherm: komma
+const normAns = s => String(s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+const p2 = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const hhmm = d => p2(d.getHours()) + p2(d.getMinutes());
+const NIET = "(niet beantwoord)";
+
+/* parser: toets.md -> vragen */
+function parseToets(d) {
+  const i = d.body.search(/^## Vragen\s*$/m);
+  const src = i < 0 ? d.body : d.body.slice(i);
+  const parts = src.split(/^(?=### V\d+ · )/m).filter(p => /^### V\d+ · /.test(p));
+  const vragen = [], warn = [];
+  for (const p of parts) {
+    const m = p.match(/^### (V\d+) · ([a-z-]+) · (\d+(?:[.,]\d+)?) punten?[^\n]*\n?/);
+    if (!m) { warn.push("kop niet herkend: " + p.split("\n")[0]); continue; }
+    let rest = p.slice(m[0].length);
+    const cut = rest.search(/^## /m); if (cut >= 0) rest = rest.slice(0, cut);
+    const q = { id: m[1], type: m[2], max: parseFloat(m[3].replace(",", ".")), opties: [], f: {} };
+    const re = /^\*\*([A-Za-z]+):\*\*[ \t]*/gm, hits = []; let x;
+    while ((x = re.exec(rest))) hits.push({ k: x[1], s: x.index, e: re.lastIndex });
+    const head = rest.slice(0, hits.length ? hits[0].s : rest.length);
+    hits.forEach((h, n) => { q.f[h.k] = rest.slice(h.e, n + 1 < hits.length ? hits[n + 1].s : rest.length).trim(); });
+    const stem = [];
+    for (const line of head.split("\n")) {
+      const o = line.match(/^- ([A-H])\. (.*)$/);
+      if (o) q.opties.push({ k: o[1], t: o[2].trim() }); else stem.push(line);
+    }
+    q.stem = stem.join("\n").trim();
+    q.thema = q.f.Thema || ""; q.uitleg = q.f.Uitleg || "";
+    const on = (q.f.Onderwerp || "").match(/\[([^\]]+)\]/); q.onderwerp = on ? on[1] : (q.f.Onderwerp || "");
+    q.beoordeling = q.f.Beoordeling || ""; q.voorbeeld = q.f.Voorbeeldantwoord || "";
+    if (q.type === "waar-onwaar") q.opties = [{ k: "waar", t: "Waar" }, { k: "onwaar", t: "Onwaar" }];
+    if (q.type === "meerdere-juist") q.juist = (q.f.Antwoord || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+    else if (q.type === "invul") q.juist = (q.f.Antwoord || "").split(" | ").map(s => s.trim()).filter(Boolean);
+    else if (q.type === "meerkeuze") q.juist = (q.f.Antwoord || "").trim().toUpperCase();
+    else if (q.type === "waar-onwaar") q.juist = (q.f.Antwoord || "").trim().toLowerCase();
+    else if (q.type !== "open") warn.push(q.id + ": onbekend type " + q.type);
+    if (q.type !== "open" && !q.f.Antwoord) warn.push(q.id + ": geen antwoord");
+    if (q.type === "open" && !q.voorbeeld) warn.push(q.id + ": geen voorbeeldantwoord");
+    if ((q.type === "meerkeuze" || q.type === "meerdere-juist") && q.opties.length < 2) warn.push(q.id + ": geen antwoordopties");
+    vragen.push(q);
+  }
+  return { vragen, warn, totaal: r2(vragen.reduce((s, q) => s + q.max, 0)) };
+}
+
+/* nakijken: één vraag */
+const answered = (q, a) => q.type === "meerdere-juist" ? Array.isArray(a) && a.length > 0 : typeof a === "string" && a.trim() !== "";
+function gradeQ(q, a) {
+  const has = answered(q, a), optTxt = k => { const o = q.opties.find(o => o.k === k); return o ? (q.type === "waar-onwaar" ? o.t : k + ". " + o.t) : String(k); };
+  const row = { id: q.id, type: q.type, max: q.max, thema: q.thema, onderwerp: q.onderwerp, stem: q.stem, uitleg: q.uitleg, pts: 0 };
+  if (q.type === "meerkeuze" || q.type === "waar-onwaar") {
+    const ok = has && a === q.juist;
+    Object.assign(row, { res: ok ? "goed" : "fout", pts: ok ? q.max : 0, gegeven: has ? a : NIET, juist: q.juist, gegL: has ? [optTxt(a)] : [NIET], juistL: [optTxt(q.juist)] });
+  } else if (q.type === "meerdere-juist") {
+    const ch = has ? a.slice().sort() : [], n = q.juist.length, g = ch.filter(k => q.juist.includes(k)).length, f = ch.length - g;
+    const pts = r2(q.max * Math.max(0, (g - f) / n));
+    Object.assign(row, { res: f === 0 && g === n ? "goed" : pts > 0 ? "deels" : "fout", pts, gegeven: has ? ch.join(",") : NIET, juist: q.juist.join(","), gegL: has ? ch.map(optTxt) : [NIET], juistL: q.juist.map(optTxt) });
+  } else if (q.type === "invul") {
+    const ok = has && q.juist.some(j => normAns(j) === normAns(a));
+    Object.assign(row, { res: ok ? "goed" : "fout", pts: ok ? q.max : 0, gegeven: has ? a.replace(/\s+/g, " ").trim() : NIET, juist: q.juist.join(" | "), gegL: [has ? a.trim() : NIET], juistL: [q.juist.join(" | ")] });
+  } else {
+    Object.assign(row, { res: "nog na te kijken", pts: 0, gegeven: has ? a.trim() : NIET, juist: q.voorbeeld, gegL: [has ? a.trim() : NIET], juistL: [q.voorbeeld], uitleg: q.voorbeeld, beoordeling: q.beoordeling, voorbeeld: true });
+  }
+  return row;
+}
+
+/* poging als markdown, volgens 11-templates/poging.md */
+function fld(label, text) {
+  const t = String(text ?? "").replace(/\r/g, "").trim();
+  if (!t.includes("\n")) return `**${label}:** ${t}\n`;
+  return `**${label}:**\n` + t.split("\n").map(l => "> " + l).join("\n") + "\n\n";
+}
+function buildPoging(u, N, at) {
+  const titel = `${u.titel}, poging ${N}`;
+  const yq = /[:#"']/.test(titel) ? JSON.stringify(titel) : titel;
+  const today = ymd(new Date()), auto = u.rows.filter(r => r.type !== "open").reduce((s, r) => s + r.pts, 0);
+  let t = `---\ntitel: ${yq}\ntype: poging\nstatus: ingeleverd\naangemaakt: ${today}\nbijgewerkt: ${today}\ntags: []\ntoets: ${u.folder}\ntoetsversie: ${u.versie}\ndatum: ${ymd(at)}\nduur: ${u.duur}\nscore_automatisch: ${nf(auto)}\nscore:\nmaximaal: ${nf(u.maximaal)}\npercentage:\nsterk: []\nzwak: []\n---\n\n# ${titel}\n\n## Antwoorden\n`;
+  for (const r of u.rows) {
+    t += `\n### ${r.id} · ${r.type} · ${nf(r.pts)} van ${nf(r.max)} punten\n\n**Thema:** ${r.thema}\n${fld("Gegeven", r.gegeven)}${fld("Juist", r.juist)}**Resultaat:** ${r.res}\n`;
+  }
+  return t + `\n## Feedback\n\n### Wat ging goed\n\n### Wat beter kan\n\n### Volgende stap\n`;
+}
+
+/* lokale toestand per toets */
+const TS = {};
+const tGet = f => TS[f] || (TS[f] = store.get(TOETS_KEY(f), null));
+const tPut = (f, st) => { TS[f] = st; if (st) store.set(TOETS_KEY(f), st); else store.del(TOETS_KEY(f)); };
+const tFind = f => toetsData().find(x => x.folder === f);
+const tCount = (st, qs) => qs.filter(q => answered(q, st.answers[q.id])).length;
+function tCta(t) {
+  const st = tGet(t.folder);
+  if (!st) return "Toets maken";
+  if (st.fase === "klaar") return st.saved ? "Toets maken" : "Poging nog opslaan";
+  const qs = parseToets(t.toets).vragen; return `Verder met toets · ${tCount(st, qs)} van ${qs.length}`;
+}
+const tBtn = t => t.toets.fm.status === "gearchiveerd" || SNAPSHOT ? "" : `<button class="btn tcta" data-act="tgo" data-folder="${esc(t.folder)}">${esc(tCta(t))}</button>`;
+
+/* schermen */
+function viewMaak(folder) {
+  const t = tFind(folder), back = { parent: t ? t.toets.slug : "v-toetsen", title: "Toets maken" };
+  if (!t) return { html: '<div class="empty"><b>Toets niet gevonden</b><a href="#v-toetsen">Naar de toetsen</a></div>', ...back };
+  const P = parseToets(t.toets), qs = P.vragen, st = tGet(folder), title = t.toets.fm.titel || t.toets.title;
+  if (st && st.fase === "klaar") return { html: tResult(t, st), ...back };
+  if (!st) return { html: `<h1 class="page">${esc(title)}</h1>
+    <div class="card" style="margin:14px 0"><dl class="kv"><dt>Vragen</dt><dd>${qs.length}</dd><dt>Punten</dt><dd>${nl(P.totaal)}</dd><dt>Versie</dt><dd>${esc(t.toets.fm.versie)}</dd></dl></div>
+    <p class="sn">Je antwoorden worden op dit apparaat bewaard. Je kunt de app sluiten en later verder gaan. Antwoord en uitleg zie je pas na het inleveren.</p>
+    ${P.warn.length ? `<p class="sn" style="color:var(--open)">Let op: ${esc(P.warn.length)} onduidelijkheden in de toets (${esc(P.warn.slice(0, 2).join("; "))}).</p>` : ""}
+    <button class="btn tbig" data-act="tbegin" data-folder="${esc(folder)}">Beginnen</button>`, ...back };
+  if (String(st.v) !== String(t.toets.fm.versie))
+    return { html: `<h1 class="page">${esc(title)}</h1><div class="card" style="margin:14px 0"><b>De toets is veranderd.</b><p class="sn">Je lopende poging hoort bij versie ${esc(st.v)}, de toets is nu versie ${esc(t.toets.fm.versie)}. Begin opnieuw om de nieuwe versie te maken.</p></div><button class="btn" data-act="treset" data-folder="${esc(folder)}" data-now="1">Opnieuw beginnen</button>`, ...back };
+  const done = tCount(st, qs), total = qs.length;
+  const bar = `<div class="qbar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><b style="width:${(100 * done / Math.max(1, total)).toFixed(1)}%"></b></div>`;
+  if (st.view === "overzicht") {
+    const open = total - done;
+    return { html: `<h1 class="page">Overzicht</h1>${bar}<div class="qmeta"><span>${done} van ${total} beantwoord</span><span>${open ? open + " open" : "alles beantwoord"}</span></div>
+      <div class="qdots" style="margin:16px 0">${qs.map((q, i) => `<button class="qd ${answered(q, st.answers[q.id]) ? "on" : ""}" data-act="tgoto" data-folder="${esc(folder)}" data-idx="${i}" aria-label="Vraag ${i + 1}${answered(q, st.answers[q.id]) ? ", beantwoord" : ", open"}">${i + 1}</button>`).join("")}</div>
+      ${st.ask === "submit" ? `<p class="sn" style="color:var(--open)">Er ${open === 1 ? "is nog 1 vraag" : "zijn nog " + open + " vragen"} niet beantwoord. Die tellen als fout.</p>` : ""}
+      <div class="stack"><button class="btn tbig" data-act="tsubmit" data-folder="${esc(folder)}">${st.ask === "submit" ? "Toch inleveren" : "Inleveren"}</button>
+      <button class="btn ghost" data-act="tgoto" data-folder="${esc(folder)}" data-idx="${Math.min(st.idx, total - 1)}">Terug naar de vragen</button>
+      <button class="btn ghost" data-act="treset" data-folder="${esc(folder)}">${st.ask === "reset" ? "Zeker weten? Tik nogmaals" : "Opnieuw beginnen"}</button></div>`, ...back };
+  }
+  const i = Math.max(0, Math.min(st.idx || 0, total - 1)), q = qs[i], a = st.answers[q.id];
+  const stem = q.stem.split("\n").map(l => inline(l, t.toets)).join("<br>");
+  let input = "";
+  if (q.type === "invul") input = `<input type="text" id="tin" value="${esc(a || "")}" placeholder="Jouw antwoord" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwoord">`;
+  else if (q.type === "open") input = `<textarea id="tin" rows="9" placeholder="Schrijf je antwoord" aria-label="Antwoord">${esc(a || "")}</textarea>`;
+  else {
+    const multi = q.type === "meerdere-juist";
+    input = `<div class="qopts" role="${multi ? "group" : "radiogroup"}">${q.opties.map(o => {
+      const on = multi ? (a || []).includes(o.k) : a === o.k;
+      return `<button class="qopt ${multi ? "multi" : ""}" data-act="tpick" data-folder="${esc(folder)}" data-val="${esc(o.k)}" aria-pressed="${on}"><span class="k">${q.type === "waar-onwaar" ? "" : esc(o.k)}</span><span>${inline(o.t, t.toets)}</span></button>`;
+    }).join("")}</div>`;
+  }
+  const hint = { "meerdere-juist": "Kies alle juiste antwoorden", "meerkeuze": "Kies één antwoord", "waar-onwaar": "Waar of onwaar", "invul": "Vul het ontbrekende in", "open": "Open vraag" }[q.type];
+  return { html: `${bar}<div class="qmeta"><span>Vraag ${i + 1} van ${total} · ${done} beantwoord</span><button class="qlink" data-act="toverzicht" data-folder="${esc(folder)}">Overzicht</button></div>
+    <div class="chips" style="margin:14px 0 0"><span class="chip">${esc(hint)}</span><span class="chip">${nl(q.max)} ${q.max === 1 ? "punt" : "punten"}</span></div>
+    <div class="qstem">${stem}</div>${input}
+    <div class="qnav"><button class="btn ghost" data-act="tprev" data-folder="${esc(folder)}" ${i === 0 ? "disabled" : ""}>Vorige</button><button class="btn" data-act="tnext" data-folder="${esc(folder)}">${i === total - 1 ? "Overzicht" : "Volgende"}</button></div>`, ...back };
+}
+function tResult(t, st) {
+  const u = st.uitslag, rows = u.rows, auto = rows.filter(r => r.type !== "open"), open = rows.filter(r => r.type === "open");
+  const sc = auto.reduce((s, r) => s + r.pts, 0), mx = auto.reduce((s, r) => s + r.max, 0), openMax = open.reduce((s, r) => s + r.max, 0);
+  const filt = st.filter || "alle";
+  const saving = S.submitting === u.folder;
+  const banner = saving ? `<div class="tbanner"><b>Opslaan in GitHub…</b><span>Even wachten.</span></div>`
+    : st.saved ? `<div class="tbanner ok"><b>Opgeslagen als poging ${st.saved.N}</b><span class="mono">${esc(st.saved.path)}</span></div>`
+    : `<div class="tbanner bad"><b>Opslaan is niet gelukt</b><span>${esc(st.err || "Onbekende fout.")} Je antwoorden staan veilig op dit apparaat.</span><button class="btn" data-act="tretry" data-folder="${esc(u.folder)}">Opnieuw proberen</button></div>`;
+  const show = rows.filter(r => filt === "alle" || (filt === "fout" ? r.res === "fout" || r.res === "deels" : r.res === "nog na te kijken"));
+  const seg = (v, l) => `<button data-act="tfilter" data-folder="${esc(u.folder)}" data-val="${v}" aria-pressed="${String(filt === v)}">${l}</button>`;
+  const chipCls = r => r.res === "goed" ? "done" : r.res === "fout" ? "bad" : "open";
+  return `<h1 class="page">Resultaat</h1>${banner}
+    <section class="card tscore"><div class="big">${nl(sc)}<small> van ${nl(mx)}</small></div><div class="sub">automatisch nagekeken</div>
+      ${open.length ? `<p class="sn" style="margin:10px 0 0">${open.length} open ${open.length === 1 ? "vraag" : "vragen"} (${nl(openMax)} punten) ${open.length === 1 ? "wordt" : "worden"} later door Claude nagekeken. Totaal te halen: ${nl(u.maximaal)}.</p>` : ""}
+      <p class="sn" style="margin:6px 0 0">${rows.filter(r => r.res === "goed").length} goed · ${rows.filter(r => r.res === "deels").length} deels · ${rows.filter(r => r.res === "fout").length} fout · ${u.duur} min</p></section>
+    <div class="seg" style="margin:14px 0 10px">${seg("alle", "Alles")}${seg("fout", "Fout of deels")}${open.length ? seg("open", "Open") : ""}</div>
+    <div class="stack">${show.map(r => `<article class="card qres">
+      <div class="qh"><b>${r.id}</b><span class="chip ${chipCls(r)}">${esc(r.res)}</span><span class="pts">${nl(r.pts)} van ${nl(r.max)}</span></div>
+      ${r.thema ? `<p class="sn" style="margin:2px 0 8px">${esc(r.thema)}</p>` : ""}
+      <div class="qs">${r.stem.split("\n").map(l => inline(l, t.toets)).join("<br>")}</div>
+      <p class="lbl">Jouw antwoord</p><div class="ans ${r.res === "goed" ? "g" : r.res === "fout" ? "f" : ""}">${r.gegL.map(x => `<div>${inline(x, t.toets)}</div>`).join("")}</div>
+      <p class="lbl">${r.voorbeeld ? "Voorbeeldantwoord" : "Juist"}</p><div class="ans g">${r.juistL.map(x => `<div>${inline(x, t.toets)}</div>`).join("")}</div>
+      ${r.beoordeling ? `<p class="lbl">Beoordeling</p><div class="ans">${r.beoordeling.split("\n").map(l => `<div>${inline(l.replace(/^- /, ""), t.toets)}</div>`).join("")}</div>` : ""}
+      ${r.uitleg && !r.voorbeeld ? `<p class="lbl">Uitleg</p><div class="ex">${inline(r.uitleg, t.toets)}</div>` : ""}</article>`).join("") || '<div class="empty">Niets in dit filter.</div>'}</div>
+    ${st.saved ? `<div class="stack" style="margin:18px 0"><button class="btn" data-act="tclose" data-folder="${esc(u.folder)}">Sluiten</button></div>` : ""}`;
+}
+
+/* opslaan in GitHub: één nieuw bestand, Git Data API */
+async function savePoging(folder, u) {
+  const cfg = store.get("lezer.cfg", {});
+  if (!cfg.token) throw new Error("Geen token ingesteld. Zet het in Instellingen.");
+  const enc = encodeURIComponent, dir = `7-toetsen/${folder}/pogingen`;
+  for (let attempt = 0; ; attempt++) {
+    const head = (await gh(cfg, `/repos/${cfg.repo}/git/ref/heads/${enc(cfg.branch)}`)).object.sha;
+    const base = (await gh(cfg, `/repos/${cfg.repo}/git/commits/${head}`)).tree.sha;
+    let list; try { list = await gh(cfg, `/repos/${cfg.repo}/contents/${dir.split("/").map(enc).join("/")}?ref=${head}`); } catch (e) { if (e.status === 404) list = []; else throw e; }
+    const names = (Array.isArray(list) ? list : []).map(x => x.name).filter(n => /^\d{4}-\d{2}-\d{2}-\d{4}\.md$/.test(n));
+    const N = names.length + 1;
+    let at = new Date(u.at); while (names.includes(`${ymd(at)}-${hhmm(at)}.md`)) at = new Date(at.getTime() + 60000);
+    const path = `${dir}/${ymd(at)}-${hhmm(at)}.md`, text = buildPoging(u, N, at);
+    const nt = await ghw(cfg, "POST", "/git/trees", { base_tree: base, tree: [{ path, mode: "100644", type: "blob", content: text }] });
+    const nc = await ghw(cfg, "POST", "/git/commits", { message: `Toets: ${u.titel}, poging ${N}`, tree: nt.sha, parents: [head] });
+    try { await ghw(cfg, "PATCH", `/git/refs/heads/${enc(cfg.branch)}`, { sha: nc.sha }); }
+    catch (e) { if (e.status === 422 && attempt < 2) continue; throw e; }
+    return { path, N, text };
+  }
+}
+async function doSave(folder) {
+  const st = tGet(folder); if (!st || !st.uitslag || st.saved || S.submitting) return;
+  S.submitting = folder; st.err = ""; route();
+  try {
+    const r = await savePoging(folder, st.uitslag);
+    st.saved = { path: r.path, N: r.N }; tPut(folder, st);
+    S.newFiles = S.newFiles || {}; S.newFiles[r.path] = r.text; ingest(S.files || {});
+    pill("Poging opgeslagen in GitHub", 3000); loadLive(true, true);
+  } catch (e) { st.err = e.message || "Opslaan niet gelukt."; tPut(folder, st); }
+  finally { S.submitting = null; route(); }
+}
+function submitToets(folder) {
+  const t = tFind(folder), st = tGet(folder); if (!t || !st) return;
+  const P = parseToets(t.toets), now = Date.now();
+  st.uitslag = { titel: t.toets.fm.titel || t.toets.title, folder, versie: st.v, at: now, duur: Math.max(1, Math.round((now - st.start) / 60000)), maximaal: t.toets.fm.maximaal || P.totaal, rows: P.vragen.map(q => gradeQ(q, st.answers[q.id])) };
+  st.fase = "klaar"; st.saved = null; st.err = ""; st.filter = "alle"; st.ask = ""; tPut(folder, st);
+  window.scrollTo(0, 0); doSave(folder);
+}
+const curQ = f => { const t = tFind(f), st = tGet(f); if (!t || !st) return null; const qs = parseToets(t.toets).vragen; return { t, st, qs, q: qs[Math.max(0, Math.min(st.idx || 0, qs.length - 1))] }; };
+const TACT = {
+  tgo(b) { const f = b.dataset.folder, st = tGet(f); if (st && st.fase === "klaar" && st.saved) tPut(f, null); location.hash = "maak-" + f; },
+  tbegin(b) { const f = b.dataset.folder, t = tFind(f); if (!t) return; tPut(f, { v: t.toets.fm.versie, start: Date.now(), answers: {}, idx: 0, view: "vraag", fase: "bezig" }); route(); window.scrollTo(0, 0); },
+  tpick(b) {
+    const c = curQ(b.dataset.folder); if (!c) return; const v = b.dataset.val;
+    if (c.q.type === "meerdere-juist") { const cur = c.st.answers[c.q.id] || [], n = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v].sort(); if (n.length) c.st.answers[c.q.id] = n; else delete c.st.answers[c.q.id]; }
+    else c.st.answers[c.q.id] = v;
+    tPut(b.dataset.folder, c.st); const y = window.scrollY; route(); window.scrollTo(0, y);
+  },
+  tprev(b) { const c = curQ(b.dataset.folder); if (!c || c.st.idx <= 0) return; c.st.idx--; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  tnext(b) { const c = curQ(b.dataset.folder); if (!c) return; if (c.st.idx >= c.qs.length - 1) { c.st.view = "overzicht"; c.st.ask = ""; } else c.st.idx++; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  toverzicht(b) { const c = curQ(b.dataset.folder); if (!c) return; c.st.view = "overzicht"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  tgoto(b) { const c = curQ(b.dataset.folder); if (!c) return; c.st.idx = Number(b.dataset.idx) || 0; c.st.view = "vraag"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  tsubmit(b) {
+    const c = curQ(b.dataset.folder); if (!c) return;
+    if (tCount(c.st, c.qs) < c.qs.length && c.st.ask !== "submit") { c.st.ask = "submit"; tPut(b.dataset.folder, c.st); route(); return; }
+    submitToets(b.dataset.folder);
+  },
+  treset(b) {
+    const f = b.dataset.folder, st = tGet(f); if (!st) return;
+    if (b.dataset.now || st.ask === "reset") { tPut(f, null); route(); window.scrollTo(0, 0); } else { st.ask = "reset"; tPut(f, st); route(); }
+  },
+  tretry(b) { doSave(b.dataset.folder); },
+  tfilter(b) { const st = tGet(b.dataset.folder); if (!st) return; st.filter = b.dataset.val; tPut(b.dataset.folder, st); route(); },
+  tclose(b) { const f = b.dataset.folder, t = tFind(f); tPut(f, null); location.hash = t ? t.toets.slug : "v-toetsen"; }
+};
+document.addEventListener("input", e => {
+  if (e.target.id !== "tin") return;
+  const m = location.hash.match(/^#maak-(.+)$/), c = m && curQ(decodeURIComponent(m[1])); if (!c) return;
+  if (e.target.value.trim()) c.st.answers[c.q.id] = e.target.value; else delete c.st.answers[c.q.id];
+  tPut(c.t.folder, c.st);
+});
 
 /* ---------- router ---------- */
 let depth = 0;
@@ -780,6 +1064,8 @@ function route() {
     info = VIEWS[h]; tab = info.tab;
     view = { start: viewStart, leerpad: viewLeerpad, projecten: viewProjecten, meer: viewMeer }[h.slice(2)] || ({ zoek: viewZoek, doelen: viewDoelen, logboek: viewLogboek, toetsen: viewToetsen, over: viewOver, instellingen: viewInstellingen }[h.slice(2)]);
     view = view();
+  } else if (h.startsWith("maak-")) {
+    view = viewMaak(decodeURIComponent(h.slice(5))); info = { parent: view.parent, title: view.title }; tab = "meer";
   } else if (S.bySlug[h]) {
     const d = S.bySlug[h]; view = viewDoc(d); info = { parent: view.parent, title: view.title };
     tab = SECTIONS[d.section] ? "leerpad" : d.section === "4-projecten" ? "projecten" : "meer";
@@ -801,6 +1087,7 @@ document.addEventListener("click", e => {
   else if (act === "set") { UI[b.dataset.key] = b.dataset.val; store.set("lezer.leerpad", UI); route(); }
   else if (act === "toggleopen") { UI.open = !UI.open; store.set("lezer.leerpad", UI); route(); }
   else if (act === "theme") { store.set("lezer.theme", b.dataset.val); applyTheme(); route(); }
+  else if (TACT[act]) TACT[act](b);
   else if (act === "saveCfg") saveCfg();
   else if (act === "reload") { loadLive(true); }
   else if (act === "syncnow") { syncAll(false); }
@@ -836,7 +1123,7 @@ function saveCfg() {
 const httpErr = (status, msg) => Object.assign(new Error(msg), { status });
 async function ghw(cfg, method, path, body) {
   let r;
-  try { r = await fetch((cfg.apiBase || "https://api.github.com") + `/repos/${cfg.repo}` + path, { method, headers: { Authorization: "Bearer " + cfg.token, Accept: "application/vnd.github+json", "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28" }, body: JSON.stringify(body) }); }
+  try { r = await fetch((cfg.apiBase || "https://api.github.com") + `/repos/${cfg.repo}` + path, { method, cache: "no-store", headers: { Authorization: "Bearer " + cfg.token, Accept: "application/vnd.github+json", "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28" }, body: JSON.stringify(body) }); }
   catch (e) { throw httpErr(0, "Geen verbinding met GitHub."); }
   if (r.status === 401) throw httpErr(401, "Het token is ongeldig of verlopen.");
   if (r.status === 403 || r.status === 404) throw httpErr(r.status, "Opslaan niet gelukt: het token mist schrijfrechten. Zet bij het token Contents op Read and write. (GitHub " + r.status + ")");
