@@ -187,7 +187,7 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T07:39Z";
+const BUILD = "2026-11-04T07:53Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -262,7 +262,7 @@ function includeFile(p) {
   return !["11-templates", "9-export", "10-inbox"].includes(top) && !top.startsWith(".");
 }
 
-const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0, pending: store.get("lezer.pending", {}) };
+const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0, saved: {}, pending: store.get("lezer.pending", {}) };
 function ingest(files) {
   S.docs = Object.keys(files).filter(includeFile).sort().map(p => parseDoc(p, files[p]));
   S.byPath = {}; S.bySlug = {};
@@ -271,6 +271,8 @@ function ingest(files) {
     .sort((a, b) => ord(a) - ord(b) || a.title.localeCompare(b.title));
   S.byTitle = {};
   for (const t of S.topics) S.byTitle[t.title.toLowerCase()] = t;
+  const now = Date.now();
+  for (const [p, v] of Object.entries(S.saved || {})) { if (v.until < now) delete S.saved[p]; else if (S.byPath[p]) S.byPath[p].fm.behandeld = v.to; }
   for (const [p, v] of Object.entries(S.pending || {})) if (S.byPath[p]) S.byPath[p].fm.behandeld = v.to;
 }
 const ord = d => { const n = Number(d.fm.volgorde); return isFinite(n) && d.fm.volgorde !== "" ? n : 1e9; };
@@ -395,7 +397,7 @@ function stats() {
 }
 const clock = () => new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
 const buildLabel = () => { const d = new Date(BUILD); return isNaN(d) ? "ontwikkelversie" : d.toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); };
-const SYNC_MS = 10 * 60 * 1000, WRITE_DELAY = 5 * 60 * 1000;
+const SYNC_MS = 10 * 60 * 1000, WRITE_DELAY = 8 * 1000;
 let flushTimer = null;
 const pendingN = () => Object.keys(S.pending).length;
 function savePending() { if (pendingN()) store.set("lezer.pending", S.pending); else store.del("lezer.pending"); }
@@ -442,8 +444,8 @@ async function flushPending() {
       }
       break;
     }
-    for (const [path, p] of items) if (S.pending[path] && S.pending[path].at === p.at) delete S.pending[path];
-    savePending(); pill("Opgeslagen in GitHub", 2500);
+    for (const [path, p] of items) { S.saved[path] = { to: p.to, until: Date.now() + 120000 }; if (S.pending[path] && S.pending[path].at === p.at) delete S.pending[path]; }
+    savePending(); pill("Opgeslagen in GitHub", 2500); refreshStatus();
     loadLive(true, true);
     S.writeErr = "";
   } catch (e) { S.writeErr = e.message; pill(e.message, 7000); flushTimer = setTimeout(flushPending, WRITE_DELAY); }
@@ -844,7 +846,7 @@ async function ghw(cfg, method, path, body) {
 async function gh(cfg, path, accept) {
   const base = cfg.apiBase || "https://api.github.com";
   let r;
-  try { r = await fetch(base + path, { headers: { Authorization: "Bearer " + cfg.token, Accept: accept || "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" } }); }
+  try { r = await fetch(base + path, { cache: "no-store", headers: { Authorization: "Bearer " + cfg.token, Accept: accept || "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" } }); }
   catch (e) { throw new Error("Geen verbinding met GitHub."); }
   if (r.status === 401) throw httpErr(401, "Het token is ongeldig of verlopen.");
   if (r.status === 403 || r.status === 404) throw httpErr(r.status, "Geen toegang tot " + cfg.repo + ". Controleer de repository en de rechten van het token.");
