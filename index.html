@@ -187,7 +187,7 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T07:32Z";
+const BUILD = "2026-11-04T07:39Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -460,7 +460,8 @@ function statusHtml() {
   const pend = np || S.flushing ? `<span><i class="dot warn"></i>${S.flushing ? "opslaan…" : S.writeErr ? "opslaan mislukt, " + np + (np === 1 ? " wijziging" : " wijzigingen") + " wachten" : np + (np === 1 ? " wijziging" : " wijzigingen") + " nog niet opgeslagen"}</span>` : "";
   const btn = a.state === "nieuw" ? '<button class="rb hot" data-act="updateapp">Vernieuw app</button>'
     : `<button class="rb ${S.syncing ? "spin" : ""}" data-act="syncnow" aria-label="Ververs">${REFRESH_SVG}</button>`;
-  return `<div class="statline" id="status"><div class="t">${kb}${app}${pend}</div>${btn}</div>`;
+  const why = S.writeErr && !S.flushing ? `<p class="sn" style="margin:2px 0 0;color:var(--open)">${esc(S.writeErr)}</p>` : "";
+  return `<div id="status"><div class="statline"><div class="t">${kb}${app}${pend}</div>${btn}</div>${why}</div>`;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function fetchMainBuild() {
@@ -836,7 +837,7 @@ async function ghw(cfg, method, path, body) {
   try { r = await fetch((cfg.apiBase || "https://api.github.com") + `/repos/${cfg.repo}` + path, { method, headers: { Authorization: "Bearer " + cfg.token, Accept: "application/vnd.github+json", "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28" }, body: JSON.stringify(body) }); }
   catch (e) { throw httpErr(0, "Geen verbinding met GitHub."); }
   if (r.status === 401) throw httpErr(401, "Het token is ongeldig of verlopen.");
-  if (r.status === 403 || r.status === 404) throw httpErr(r.status, "Opslaan niet gelukt: het token mist schrijfrechten. Zet bij het token Contents op Read and write.");
+  if (r.status === 403 || r.status === 404) throw httpErr(r.status, "Opslaan niet gelukt: het token mist schrijfrechten. Zet bij het token Contents op Read and write. (GitHub " + r.status + ")");
   if (!r.ok) throw httpErr(r.status, "Opslaan niet gelukt (GitHub fout " + r.status + ").");
   return r.json();
 }
