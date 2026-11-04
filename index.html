@@ -227,7 +227,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T21:10Z";
+const BUILD = "2026-11-04T21:26Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -819,7 +819,7 @@ function parseToets(d) {
   const parts = src.split(/^(?=### V\d+ · )/m).filter(p => /^### V\d+ · /.test(p));
   const vragen = [], warn = [];
   for (const p of parts) {
-    const m = p.match(/^### (V\d+) · ([a-z-]+) · (\d+(?:[.,]\d+)?) punten?[^\n]*\n?/);
+    const m = p.match(/^### (V\d+) · ([a-z-]+) · (\d+(?:[.,]\d+)?) punt(?:en)?[^\n]*\n?/);
     if (!m) { warn.push("kop niet herkend: " + p.split("\n")[0]); continue; }
     let rest = p.slice(m[0].length);
     const cut = rest.search(/^## /m); if (cut >= 0) rest = rest.slice(0, cut);
