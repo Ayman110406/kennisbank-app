@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
-/* Layout: smalle kolom (max 720px), kopbalk bovenaan, tabbalk onderaan. Het leerpad is een lijst op volgorde met een voortgangsstrip: een tik per onderwerp. */
+/* Layout: smalle kolom (max 720px), kopbalk bovenaan, tabbalk onderaan. Het leerpad is een lijst op volgorde met een voortgangsbalk. */
 :root {
   --bg: #EEF1F4;
   --surface: #FFFFFF;
@@ -76,15 +76,14 @@ h2.sec a { text-decoration: none; }
 /* voortgang */
 .prog .big { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
 .prog .big small { font-size: 18px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
-.strip { display: flex; gap: 1.5px; height: 28px; margin: 14px 0 10px; align-items: flex-end; }
-.strip i { flex: 1; min-width: 1px; background: var(--chip); border-radius: 1px; height: 55%; }
-.strip i.b { height: 100%; box-shadow: inset 0 2px 0 var(--open); background: var(--open-bg); }
-.strip i.d { background: var(--done); }
-.strip i.b.d { box-shadow: none; background: var(--done); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 10px; height: 10px; border-radius: 2px; background: var(--chip); display: inline-block; }
-.legend i.d { background: var(--done); } .legend i.b { background: var(--open-bg); box-shadow: inset 0 2px 0 var(--open); }
+.status { padding: 4px 16px; margin-top: 14px; }
+.srow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.srow:first-child { border-top: 0; }
+.srow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+.srow .dot.ok { background: var(--done); } .srow .dot.warn { background: var(--open); }
+.srow .txt { flex: 1; min-width: 0; } .srow .txt b { font-weight: 600; } .srow .txt span { display: block; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.srow button { border: 1px solid var(--line); background: var(--chip); color: var(--ink); border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; flex: none; }
+.srow button.hot { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .meter { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; margin-top: 8px; }
 .meter b { display: block; height: 100%; background: var(--done); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -177,6 +176,8 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
+const BUILD = "2026-11-04T06:57Z";
+const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
 const SITE_PREFIXES = ["Behandeld:", "Toets:"];
@@ -359,11 +360,11 @@ const firstPara = d => {
   return (parts[0] || "").replace(/\s+/g, " ").replace(/[*_`]/g, "");
 };
 const kindLabel = d => d.type || d.section.replace(/^\d+-/, "");
-function topicRow(d) {
+function topicRow(d, label) {
   const sub = d.fm.domein || d.fm.soort || "";
   return `<a class="row" href="#${d.slug}"><span class="check ${isDone(d) ? "on" : ""} ${isBasis(d) ? "basis" : ""}">${icon("check")}</span>
     <span class="main"><span class="t">${esc(d.title)}</span><br><span class="m">${esc(d.type)}${sub ? " · " + esc(sub) : ""}${d.fm.status ? " · " + esc(d.fm.status) : ""}</span></span>
-    ${isBasis(d) ? '<span class="flag">basis</span>' : ""}</a>`;
+    ${isBasis(d) ? '<span class="flag">basis</span>' : label ? '<span class="flag" style="background:var(--chip);color:var(--muted)">verdieping</span>' : ""}</a>`;
 }
 
 /* ---------- views ---------- */
@@ -380,27 +381,59 @@ function stats() {
   const t = S.topics, b = t.filter(isBasis);
   return { total: t.length, done: t.filter(isDone).length, basis: b.length, basisDone: b.filter(isDone).length };
 }
+const clock = () => new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+const buildLabel = () => { const d = new Date(BUILD); return isNaN(d) ? "ontwikkelversie" : d.toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); };
+function statusHtml() {
+  if (S.meta.mode === "snapshot") return `<section class="card status" id="status"><div class="srow"><i class="dot"></i><div class="txt"><b>Momentopname</b><span>van ${esc(fmtDate(S.meta.date, true))}${S.meta.sha ? " · " + esc(S.meta.sha) : ""}</span></div></div></section>`;
+  const a = S.app || { state: "check" };
+  const kb = `<div class="srow"><i class="dot ${S.meta.when === "uit cache" ? "" : "ok"}"></i><div class="txt"><b>Kennisbank</b><span>live uit GitHub · ververst ${esc(S.meta.when || "…")}</span></div><button data-act="reload">Ververs</button></div>`;
+  const txt = { check: ["Controleren…", ""], ok: ["Up-to-date met main", "ok"], nieuw: ["Nieuwe versie in main", "warn"], fout: ["Kon main niet controleren", ""] }[a.state];
+  const app = `<div class="srow"><i class="dot ${txt[1]}"></i><div class="txt"><b>App</b><span>${txt[0]} · versie ${esc(buildLabel())}${a.checked ? " · gecontroleerd " + esc(a.checked) : ""}</span></div>${a.state === "nieuw" ? '<button class="hot" data-act="updateapp">Vernieuw</button>' : '<button data-act="checkapp">Check</button>'}</div>`;
+  return `<section class="card status" id="status">${kb}${app}</section>`;
+}
+async function checkApp() {
+  if (SNAPSHOT || BUILD === "dev") return;
+  S.app = Object.assign({}, S.app, { state: "check" }); refreshStatus();
+  let state = "fout";
+  try {
+    const r = await fetch(`https://api.github.com/repos/${APP_REPO}/contents/index.html?ref=main`, { headers: { Accept: "application/vnd.github.raw+json" }, cache: "no-store" });
+    if (r.ok) { const m = (await r.text()).match(/const BUILD = "(\d{4}-[^"]+)"/); if (m) state = m[1] === BUILD ? "ok" : "nieuw"; }
+  } catch (e) {}
+  S.app = { state, checked: clock() }; refreshStatus();
+}
+function refreshStatus() { const el = $("#status"); if (el) el.outerHTML = statusHtml(); }
 function viewStart() {
   const st = stats();
-  const ticks = S.topics.map(d => `<i class="${isBasis(d) ? "b" : ""} ${isDone(d) ? "d" : ""}"></i>`).join("");
-  const next = S.topics.filter(d => !isDone(d) && isBasis(d)).slice(0, 5);
-  const nextList = next.length ? next : S.topics.filter(d => !isDone(d)).slice(0, 5);
+  const open = S.topics.filter(d => !isDone(d));
+  const nextBasis = open.find(isBasis), nextVerdieping = open.find(d => !isBasis(d));
+  const nextList = [nextBasis, nextVerdieping].filter(Boolean);
+  const tdata = toetsData().filter(t => t.toets.fm.status !== "gearchiveerd" && t.pogingen.length)
+    .sort((a, b) => String(b.pogingen[b.pogingen.length - 1].fm.datum || "").localeCompare(String(a.pogingen[a.pogingen.length - 1].fm.datum || ""))).slice(0, 3);
+  const doelen = S.docs.filter(d => d.path.startsWith("5-doel/") && !/README\.md$/.test(d.path) && d.fm.status === "bezig");
   const recent = S.docs.filter(d => d.fm.bijgewerkt && (SECTIONS[d.section] || d.section === "4-projecten") && d.type !== "")
     .sort((a, b) => String(b.fm.bijgewerkt).localeCompare(String(a.fm.bijgewerkt)) || a.title.localeCompare(b.title)).slice(0, 5);
   const n = p => S.docs.filter(d => d.path.startsWith(p) && !/README\.md$/.test(d.path) && d.type !== "poging" && (p !== "7-toetsen/" || /toets\.md$/.test(d.path))).length;
-  const metaLine = S.meta.mode === "snapshot" ? `momentopname ${fmtDate(S.meta.date)}${S.meta.sha ? " · " + esc(S.meta.sha) : ""}` : `live uit GitHub · ${esc(S.meta.when || "")}`;
+  const pc = (a, b) => b ? Math.round(100 * a / b) : 0;
+  const toetsRow = t => {
+    const last = t.pogingen[t.pogingen.length - 1], pcts = t.scores.filter(v => v != null), lastPct = pcts[pcts.length - 1];
+    const wacht = last.fm.status === "ingeleverd";
+    return `<a class="row" href="#${t.toets.slug}"><span class="main"><span class="t">${esc(t.toets.title)}</span><br><span class="m">${t.pogingen.length} ${t.pogingen.length === 1 ? "poging" : "pogingen"}${lastPct != null ? " · laatste " + Math.round(lastPct) + "%" : ""}${last.fm.datum ? " · " + esc(fmtDate(last.fm.datum)) : ""}</span></span>${wacht ? '<span class="flag">nakijken</span>' : ""}</a>`;
+  };
+  const doelRow = d => `<a class="row" href="#${d.slug}"><span class="main"><span class="t">${esc(d.title)}</span>${d.fm.streefdatum ? `<br><span class="m">streefdatum ${esc(fmtDate(d.fm.streefdatum))}</span>` : ""}</span></a>`;
+  const sec = (title, rows) => rows ? `<h2 class="sec">${title}</h2><div class="card pad0 list">${rows}</div>` : "";
   return { html: `
-    <p class="kicker">${metaLine}</p>
     <h1 class="page">Kennisbank</h1>
+    ${statusHtml()}
     <section class="card prog" style="margin-top:14px">
       <div class="big">${st.done}<small> van ${st.total} behandeld</small></div>
-      <div class="strip" role="img" aria-label="${st.done} van ${st.total} onderwerpen behandeld">${ticks}</div>
-      <div class="legend"><span><i class="d"></i>behandeld</span><span><i class="b"></i>basis, nog open</span><span><i></i>verdieping, nog open</span></div>
+      <div class="meter" role="img" aria-label="${st.done} van ${st.total} onderwerpen behandeld"><b style="width:${pc(st.done, st.total)}%"></b></div>
       <div style="margin-top:14px;font-size:14px;display:flex;justify-content:space-between"><span>Basis</span><b>${st.basisDone} van ${st.basis}</b></div>
-      <div class="meter"><b style="width:${st.basis ? Math.round(100 * st.basisDone / st.basis) : 0}%"></b></div>
+      <div class="meter"><b style="width:${pc(st.basisDone, st.basis)}%"></b></div>
     </section>
-    <h2 class="sec">Verder met</h2>
-    <div class="card pad0 list">${nextList.length ? nextList.map(topicRow).join("") : '<div class="empty"><b>Alles behandeld</b>Er staat niets meer open.</div>'}</div>
+    ${sec("Toetsen waar ik mee bezig ben", tdata.map(toetsRow).join(""))}
+    ${sec("Doelen die bezig zijn", doelen.map(doelRow).join(""))}
+    <h2 class="sec">Volgende onderwerpen</h2>
+    <div class="card pad0 list">${nextList.length ? nextList.map(d => topicRow(d, true)).join("") : '<div class="empty"><b>Alles behandeld</b>Er staat niets meer open.</div>'}</div>
     <h2 class="sec">Recent aangepast</h2>
     <div class="card pad0 list">${recent.map(d => `<a class="row" href="#${d.slug}"><span class="main"><span class="t">${esc(d.title)}</span><br><span class="m">${esc(kindLabel(d))} · ${esc(fmtDate(d.fm.bijgewerkt))}</span></span></a>`).join("")}</div>
     <h2 class="sec">Verder kijken</h2>
@@ -679,6 +712,8 @@ document.addEventListener("click", e => {
   else if (act === "theme") { store.set("lezer.theme", b.dataset.val); applyTheme(); route(); }
   else if (act === "saveCfg") saveCfg();
   else if (act === "reload") { loadLive(true); }
+  else if (act === "checkapp") { checkApp(); }
+  else if (act === "updateapp") { location.href = location.pathname + "?v=" + Date.now(); }
   else if (act === "clearCfg") { store.del("lezer.cfg"); idbDel("docs"); S.setup = true; S.docs = []; route(); }
 });
 document.addEventListener("input", e => {
@@ -741,7 +776,7 @@ async function loadLive(force) {
       commits = cs.map(c => ({ sha: c.sha.slice(0, 7), date: c.commit.author.date, msg: c.commit.message.split("\n")[0] }));
     } catch (e) {}
     ingest(files); S.commits = commits;
-    S.meta = { mode: "live", when: new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) };
+    S.meta = { mode: "live", when: clock() };
     S.setup = false; route(); pill("Bijgewerkt", 1500);
     idbSet(key, { shas, files });
   } catch (err) { pill(err.message, 6000); if (!S.docs.length) { S.setup = true; route(); } }
@@ -759,8 +794,10 @@ async function boot() {
   if (!cfg.token) { S.setup = true; route(); return; }
   const cached = await idbGet("docs:" + cfg.repo + "@" + cfg.branch);
   if (cached) { ingest(cached.files); S.meta = { mode: "live", when: "uit cache" }; route(); }
+  checkApp();
   await loadLive();
 }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.app && S.app.checked && !SNAPSHOT) checkApp(); });
 boot();
 </script>
 </body></html>
