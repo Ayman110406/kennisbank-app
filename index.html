@@ -227,11 +227,13 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T21:26Z";
+const BUILD = "2026-11-04T21:28Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
 const SITE_PREFIXES = ["Behandeld:", "Toets:", "Concept:"];
+const SITE_OMSCHRIJVING = { "Behandeld:": "voortgang bijgehouden", "Toets:": "toetspogingen ingeleverd", "Concept:": "toetsconcepten opgeslagen" };
+const isSiteCommit = m => SITE_PREFIXES.some(p => String(m).startsWith(p));
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const store = {
@@ -428,7 +430,7 @@ const VIEWS = {
   "v-start": { tab: "start" }, "v-leerpad": { tab: "leerpad" }, "v-projecten": { tab: "projecten" }, "v-meer": { tab: "meer" },
   "v-zoek": { tab: "meer", parent: "v-meer", title: "Zoeken" }, "v-doelen": { tab: "meer", parent: "v-meer", title: "Doelen" },
   "v-logboek": { tab: "meer", parent: "v-meer", title: "Logboek" }, "v-toetsen": { tab: "meer", parent: "v-meer", title: "Toetsen" },
-  "v-over": { tab: "meer", parent: "v-meer", title: "Over de kennisbank" }, "v-instellingen": { tab: "meer", parent: "v-meer", title: "Instellingen" }
+  "v-over": { tab: "meer", parent: "v-meer", title: "Over de kennisbank en de app" }, "v-instellingen": { tab: "meer", parent: "v-meer", title: "Instellingen" }
 };
 const UI = Object.assign({ level: "basis", soort: "alle", open: false }, store.get("lezer.leerpad", {}));
 let query = "";
@@ -624,7 +626,7 @@ function viewMeer() {
   const item = (h, t, s) => `<a class="row" href="#${h}"><span class="main"><span class="t">${t}</span><br><span class="m">${s}</span></span></a>`;
   return { html: `<h1 class="page">Meer</h1><div class="card pad0 list" style="margin-top:14px">
     ${item("v-zoek", "Zoeken", "in titels, tags en tekst")}${item("v-doelen", "Doelen", "wat ik wil bereiken")}${item("v-logboek", "Logboek", "momentopnames en reflecties")}
-    ${item("v-toetsen", "Toetsen", "vragen, pogingen en scores")}${item("v-over", "Over de kennisbank", "aantallen en laatste wijzigingen")}${item("v-instellingen", "Instellingen", "weergave en verbinding")}</div>` };
+    ${item("v-toetsen", "Toetsen", "vragen, pogingen en scores")}${item("v-over", "Over de kennisbank en de app", "wijzigingen, versie en voortgang")}${item("v-instellingen", "Instellingen", "weergave en verbinding")}</div>` };
 }
 function snippet(d, words) {
   const text = d.body.replace(/\s+/g, " ");
@@ -716,17 +718,43 @@ function viewToetsen() {
       <div class="sn">${t.pogingen.length} ${t.pogingen.length === 1 ? "poging" : "pogingen"}${last != null ? " · laatste " + Math.round(last) + "%" : ""}${wacht ? " · " + wacht + " nakijken" : ""}${t.toets.fm.versie ? " · versie " + esc(t.toets.fm.versie) : ""}</div>
       ${spark(t.scores)}${themeList(t)}</a>${tBtn(t)}</div>`; }).join("")}</div>` };
 }
+function loadAppLog() {
+  if (SNAPSHOT || S.appLog !== undefined) return;
+  S.appLog = null;
+  (async () => {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${APP_REPO}/commits?per_page=15`, { cache: "no-store", headers: { Accept: "application/vnd.github+json" } });
+      if (!r.ok) throw new Error("status " + r.status);
+      S.appLog = (await r.json()).map(c => ({ sha: c.sha.slice(0, 7), date: c.commit.author.date, msg: c.commit.message.split("\n")[0] }));
+    } catch (e) { S.appLog = "fout"; }
+    if (location.hash === "#v-over") route();
+  })();
+}
 function viewOver() {
-  const st = stats(), shown = S.commits.filter(c => !SITE_PREFIXES.some(p => c.msg.startsWith(p)));
+  loadAppLog();
+  const st = stats(), shown = S.commits.filter(c => !isSiteCommit(c.msg));
+  const grens = Date.now() - 30 * 864e5, recent = S.commits.filter(c => Date.parse(c.date) >= grens);
+  const tellers = SITE_PREFIXES.map(p => [p, recent.filter(c => c.msg.startsWith(p)).length]);
   const hidden = S.commits.length - shown.length;
   const words = S.docs.reduce((n, d) => n + d.body.split(/\s+/).length, 0);
-  return { html: `<h1 class="page">Over de kennisbank</h1>
-    <div class="card" style="margin-top:14px"><dl class="kv">
+  const rij = c => `<div class="row"><span class="main"><span class="t" style="font-weight:500">${esc(c.msg)}</span><br><span class="m">${esc(fmtDate(c.date))}${c.sha ? " · " + esc(c.sha) : ""}</span></span></div>`;
+  const a = S.app || { state: "check" }, log = S.appLog;
+  const appStatus = { check: "wordt gecontroleerd…", ok: "up-to-date", nieuw: "nieuwe versie beschikbaar", fout: "controle mislukt" }[a.state];
+  return { html: `<h1 class="page">Over de kennisbank en de app</h1>
+    <h2 class="sec">De kennisbank</h2>
+    <div class="card"><dl class="kv">
       <dt>Documenten</dt><dd>${S.docs.length}</dd><dt>Onderwerpen</dt><dd>${st.total} (${st.basis} basis)</dd><dt>Woorden</dt><dd>${words.toLocaleString("nl-NL")}</dd>
       <dt>Bron</dt><dd>${S.meta.mode === "snapshot" ? "momentopname van " + esc(fmtDate(S.meta.date, true)) : "live uit GitHub"}</dd></dl></div>
     <h2 class="sec">Laatste wijzigingen</h2>
-    ${shown.length ? `<div class="card pad0 list">${shown.slice(0, 30).map(c => `<div class="row"><span class="main"><span class="t" style="font-weight:500">${esc(c.msg)}</span><br><span class="m">${esc(fmtDate(c.date))}${c.sha ? " · " + esc(c.sha) : ""}</span></span></div>`).join("")}</div>` : '<div class="empty">Geen wijzigingen beschikbaar.</div>'}
-    ${hidden ? `<p class="sn" style="margin-top:10px">${hidden} voortgangscommits verborgen (Behandeld, Toets).</p>` : ""}` };
+    ${shown.length ? `<div class="card pad0 list">${shown.slice(0, 30).map(rij).join("")}</div>` : '<div class="empty">Geen wijzigingen beschikbaar.</div>'}
+    ${hidden ? `<p class="sn" style="margin-top:10px">${hidden} commits die de app zelf maakte (voortgang, toetsen en conceptantwoorden) zijn verborgen.${S.commitsCap ? " Er is een deel van de geschiedenis niet bekeken." : ""}</p>` : ""}
+    ${recent.length && tellers.some(t => t[1]) ? `<h2 class="sec">Door de app bijgehouden (laatste 30 dagen)</h2><div class="card"><dl class="kv">${tellers.map(([p, n]) => `<dt>${n}×</dt><dd>${esc(SITE_OMSCHRIJVING[p])}</dd>`).join("")}</dl></div>` : ""}
+    <h2 class="sec">De app</h2>
+    <div class="card"><dl class="kv"><dt>Versie</dt><dd>${esc(buildLabel())}</dd><dt>Status</dt><dd>${esc(appStatus)}</dd></dl>
+      ${a.state === "nieuw" ? '<div style="margin-top:12px"><button class="btn" data-act="updateapp">Vernieuw app</button></div>' : ""}</div>
+    <h2 class="sec">Wijzigingen aan de app</h2>
+    ${Array.isArray(log) ? (log.length ? `<div class="card pad0 list">${log.map(rij).join("")}</div>` : '<div class="empty">Geen wijzigingen beschikbaar.</div>')
+      : log === "fout" ? '<div class="empty">De geschiedenis van de app kon niet worden opgehaald.</div>' : '<div class="empty">Laden…</div>'}` };
 }
 function viewInstellingen() {
   const th = store.get("lezer.theme", "auto"), cfg = store.get("lezer.cfg", {});
@@ -1287,9 +1315,17 @@ async function loadLive(force, silent) {
     };
     await Promise.all(Array.from({ length: 8 }, work));
     let commits = [];
+    S.commitsCap = false;
     try {
-      const cs = await gh(cfg, `/repos/${cfg.repo}/commits?sha=${encodeURIComponent(cfg.branch)}&per_page=100`);
-      commits = cs.map(c => ({ sha: c.sha.slice(0, 7), date: c.commit.author.date, msg: c.commit.message.split("\n")[0] }));
+      // Toetsconcepten maken veel commits. Haal daarom pagina's op tot er 30 echte wijzigingen zijn en de laatste 30 dagen compleet zijn (maximaal 5 x 100).
+      const grens = Date.now() - 30 * 864e5;
+      for (let page = 1; page <= 5; page++) {
+        const cs = await gh(cfg, `/repos/${cfg.repo}/commits?sha=${encodeURIComponent(cfg.branch)}&per_page=100&page=${page}`);
+        commits.push(...cs.map(c => ({ sha: c.sha.slice(0, 7), date: c.commit.author.date, msg: c.commit.message.split("\n")[0] })));
+        const echt = commits.filter(c => !isSiteCommit(c.msg)).length, oudste = commits.length ? Date.parse(commits[commits.length - 1].date) : 0;
+        if (cs.length < 100 || (echt >= 30 && oudste < grens)) break;
+        if (page === 5) S.commitsCap = true;
+      }
     } catch (e) {}
     const sig = Object.keys(shas).sort().map(k => k + shas[k]).join("|") + "#" + (commits[0] ? commits[0].sha : "") + "#" + Object.keys(S.concepts).join(",");
     const same = silent && S.sig === sig && S.docs.length;
