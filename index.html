@@ -219,6 +219,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 .qres .ans { padding: 8px 10px; border-radius: 8px; background: var(--chip); font-size: 14.5px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .qres .ans.g { background: var(--done-bg); } .qres .ans.f { background: var(--bad-bg); }
 .qres .ex { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.qsync { font-size: 12px; color: var(--muted); min-height: 16px; margin-top: 2px; }
 </style>
 
 <div class="wrap" id="app"></div>
@@ -226,11 +227,11 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-04T21:00Z";
+const BUILD = "2026-11-04T21:10Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
-const SITE_PREFIXES = ["Behandeld:", "Toets:"];
+const SITE_PREFIXES = ["Behandeld:", "Toets:", "Concept:"];
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const store = {
@@ -296,12 +297,12 @@ function parseDoc(path, text) {
 function includeFile(p) {
   if (!p.endsWith(".md")) return false;
   const top = p.split("/")[0], name = p.split("/").pop();
-  if (name === "CLAUDE.md") return false;
+  if (name === "CLAUDE.md" || name === "concept.md") return false;
   if (!p.includes("/") && name === "README.md") return false;
   return !["11-templates", "9-export", "10-inbox"].includes(top) && !top.startsWith(".");
 }
 
-const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0, saved: {}, pending: store.get("lezer.pending", {}) };
+const S = { docs: [], byPath: {}, bySlug: {}, topics: [], commits: [], meta: {}, hiddenCommits: 0, saved: {}, concepts: {}, checked: {}, pending: store.get("lezer.pending", {}) };
 function ingest(files) {
   S.files = files; files = Object.assign({}, files);
   for (const [p, tx] of Object.entries(S.newFiles || {})) { if (p in files) delete S.newFiles[p]; else files[p] = tx; }
@@ -896,7 +897,7 @@ const tFind = f => toetsData().find(x => x.folder === f);
 const tCount = (st, qs) => qs.filter(q => answered(q, st.answers[q.id])).length;
 function tCta(t) {
   const st = tGet(t.folder);
-  if (!st) return "Toets maken";
+  if (!st) return S.concepts[t.folder] ? "Verder met toets (concept in GitHub)" : "Toets maken";
   if (st.fase === "klaar") return st.saved ? "Toets maken" : "Poging nog opslaan";
   const qs = parseToets(t.toets).vragen; return `Verder met toets · ${tCount(st, qs)} van ${qs.length}`;
 }
@@ -908,18 +909,21 @@ function viewMaak(folder) {
   if (!t) return { html: '<div class="empty"><b>Toets niet gevonden</b><a href="#v-toetsen">Naar de toetsen</a></div>', ...back };
   const P = parseToets(t.toets), qs = P.vragen, st = tGet(folder), title = t.toets.fm.titel || t.toets.title;
   if (st && st.fase === "klaar") return { html: tResult(t, st), ...back };
+  if (!st && S.concepts[folder]) return { html: `<h1 class="page">${esc(title)}</h1><div class="card" style="margin:14px 0"><b>Er staat een concept in GitHub.</b><p class="sn">Je kunt verder waar je was (op dit of een ander apparaat), of opnieuw beginnen. Opnieuw beginnen verwijdert dat concept.</p></div>
+    <div class="stack"><button class="btn tbig" data-act="tadopt" data-folder="${esc(folder)}">Verder met het concept</button><button class="btn ghost" data-act="tbegin" data-folder="${esc(folder)}" data-now="1">Opnieuw beginnen</button></div>`, ...back };
   if (!st) return { html: `<h1 class="page">${esc(title)}</h1>
     <div class="card" style="margin:14px 0"><dl class="kv"><dt>Vragen</dt><dd>${qs.length}</dd><dt>Punten</dt><dd>${nl(P.totaal)}</dd><dt>Versie</dt><dd>${esc(t.toets.fm.versie)}</dd></dl></div>
     <p class="sn">Je antwoorden worden op dit apparaat bewaard. Je kunt de app sluiten en later verder gaan. Antwoord en uitleg zie je pas na het inleveren.</p>
     ${P.warn.length ? `<p class="sn" style="color:var(--open)">Let op: ${esc(P.warn.length)} onduidelijkheden in de toets (${esc(P.warn.slice(0, 2).join("; "))}).</p>` : ""}
     <button class="btn tbig" data-act="tbegin" data-folder="${esc(folder)}">Beginnen</button>`, ...back };
+  if (st.conflict) return { html: tConflict(t, st), ...back };
   if (String(st.v) !== String(t.toets.fm.versie))
     return { html: `<h1 class="page">${esc(title)}</h1><div class="card" style="margin:14px 0"><b>De toets is veranderd.</b><p class="sn">Je lopende poging hoort bij versie ${esc(st.v)}, de toets is nu versie ${esc(t.toets.fm.versie)}. Begin opnieuw om de nieuwe versie te maken.</p></div><button class="btn" data-act="treset" data-folder="${esc(folder)}" data-now="1">Opnieuw beginnen</button>`, ...back };
   const done = tCount(st, qs), total = qs.length;
   const bar = `<div class="qbar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><b style="width:${(100 * done / Math.max(1, total)).toFixed(1)}%"></b></div>`;
   if (st.view === "overzicht") {
     const open = total - done;
-    return { html: `<h1 class="page">Overzicht</h1>${bar}<div class="qmeta"><span>${done} van ${total} beantwoord</span><span>${open ? open + " open" : "alles beantwoord"}</span></div>
+    return { html: `<h1 class="page">Overzicht</h1>${bar}<div class="qmeta"><span>${done} van ${total} beantwoord</span><span>${open ? open + " open" : "alles beantwoord"}</span></div><div class="qsync" id="tsync">${tSyncHtml(folder)}</div>
       <div class="qdots" style="margin:16px 0">${qs.map((q, i) => `<button class="qd ${answered(q, st.answers[q.id]) ? "on" : ""}" data-act="tgoto" data-folder="${esc(folder)}" data-idx="${i}" aria-label="Vraag ${i + 1}${answered(q, st.answers[q.id]) ? ", beantwoord" : ", open"}">${i + 1}</button>`).join("")}</div>
       ${st.ask === "submit" ? `<p class="sn" style="color:var(--open)">Er ${open === 1 ? "is nog 1 vraag" : "zijn nog " + open + " vragen"} niet beantwoord. Die tellen als fout.</p>` : ""}
       <div class="stack"><button class="btn tbig" data-act="tsubmit" data-folder="${esc(folder)}">${st.ask === "submit" ? "Toch inleveren" : "Inleveren"}</button>
@@ -939,7 +943,7 @@ function viewMaak(folder) {
     }).join("")}</div>`;
   }
   const hint = { "meerdere-juist": "Kies alle juiste antwoorden", "meerkeuze": "Kies één antwoord", "waar-onwaar": "Waar of onwaar", "invul": "Vul het ontbrekende in", "open": "Open vraag" }[q.type];
-  return { html: `${bar}<div class="qmeta"><span>Vraag ${i + 1} van ${total} · ${done} beantwoord</span><button class="qlink" data-act="toverzicht" data-folder="${esc(folder)}">Overzicht</button></div>
+  return { html: `${bar}<div class="qmeta"><span>Vraag ${i + 1} van ${total} · ${done} beantwoord</span><button class="qlink" data-act="toverzicht" data-folder="${esc(folder)}">Overzicht</button></div><div class="qsync" id="tsync">${tSyncHtml(folder)}</div>
     <div class="chips" style="margin:14px 0 0"><span class="chip">${esc(hint)}</span><span class="chip">${nl(q.max)} ${q.max === 1 ? "punt" : "punten"}</span></div>
     <div class="qstem">${stem}</div>${input}
     <div class="qnav"><button class="btn ghost" data-act="tprev" data-folder="${esc(folder)}" ${i === 0 ? "disabled" : ""}>Vorige</button><button class="btn" data-act="tnext" data-folder="${esc(folder)}">${i === total - 1 ? "Overzicht" : "Volgende"}</button></div>`, ...back };
@@ -971,39 +975,154 @@ function tResult(t, st) {
     ${st.saved ? `<div class="stack" style="margin:18px 0"><button class="btn" data-act="tclose" data-folder="${esc(u.folder)}">Sluiten</button></div>` : ""}`;
 }
 
-/* opslaan in GitHub: één nieuw bestand, Git Data API */
-async function savePoging(folder, u) {
-  const cfg = store.get("lezer.cfg", {});
-  if (!cfg.token) throw new Error("Geen token ingesteld. Zet het in Instellingen.");
-  const enc = encodeURIComponent, dir = `7-toetsen/${folder}/pogingen`;
+/* concept in git: 7-toetsen/<toets>/concept.md (één lopend concept per toets, ook leesbaar voor de site) */
+const CT = {}, CRUN = {};
+const isoT = ms => new Date(ms).toISOString();
+function buildConcept(st, qs, titel, folder, gew) {
+  const tt = titel + ", concept", yq = /[:#"']/.test(tt) ? JSON.stringify(tt) : tt;
+  let t = `---\ntitel: ${yq}\ntype: concept\nstatus: bezig\naangemaakt: ${ymd(new Date(st.start))}\nbijgewerkt: ${ymd(new Date(gew))}\ntags: []\ntoets: ${folder}\ntoetsversie: ${st.v}\ngestart: ${isoT(st.start)}\ngewijzigd: ${isoT(gew)}\napparaat: app\npositie: ${(st.idx || 0) + 1}\n---\n\n# ${tt}\n\n## Antwoorden\n`;
+  for (const q of qs) {
+    const a = st.answers[q.id]; if (!answered(q, a)) continue;
+    t += `\n### ${q.id}\n\n${fld("Gegeven", q.type === "meerdere-juist" ? a.slice().sort().join(",") : String(a).trim())}`;
+  }
+  return t;
+}
+function parseConcept(text, qs) {
+  const d = parseDoc("concept.md", text), type = {}; qs.forEach(q => type[q.id] = q.type);
+  const answers = {};
+  for (const blk of d.body.split(/^(?=### V\d+\s*$)/m)) {
+    const id = (blk.match(/^### (V\d+)\s*$/m) || [])[1], m = blk.match(/\*\*Gegeven:\*\*([\s\S]*)$/); if (!id || !m || !type[id]) continue;
+    let v = m[1];
+    if (/^[ \t]*\n/.test(v)) v = v.split("\n").filter(l => l.startsWith(">")).map(l => l.replace(/^> ?/, "")).join("\n"); else v = v.trim();
+    if (!v.trim()) continue;
+    answers[id] = type[id] === "meerdere-juist" ? v.split(",").map(s => s.trim()).filter(Boolean).sort() : v;
+  }
+  const g = Date.parse(d.fm.gewijzigd), s = Date.parse(d.fm.gestart);
+  return { gew: isFinite(g) ? g : 0, start: isFinite(s) ? s : Date.now(), v: d.fm.toetsversie, idx: Math.max(0, (Number(d.fm.positie) || 1) - 1), apparaat: d.fm.apparaat || "", answers };
+}
+async function fetchConcept(cfg, folder, ref) {
+  const f = tFind(folder); if (!f) return null;
+  let text;
+  try { text = await gh(cfg, `/repos/${cfg.repo}/contents/7-toetsen/${encodeURIComponent(folder)}/concept.md?ref=${encodeURIComponent(ref || cfg.branch)}`, "application/vnd.github.raw+json"); }
+  catch (e) { if (e.status === 404) return null; throw e; }
+  return parseConcept(text, parseToets(f.toets).vragen);
+}
+async function listDir(cfg, dir, ref) {
+  try { const l = await gh(cfg, `/repos/${cfg.repo}/contents/${dir.split("/").map(encodeURIComponent).join("/")}?ref=${ref}`); return Array.isArray(l) ? l.map(x => x.name) : []; }
+  catch (e) { if (e.status === 404) return []; throw e; }
+}
+/* één commit via de Git Data API; build(head) geeft { tree, message, out } of null */
+async function ghCommit(cfg, build) {
+  const enc = encodeURIComponent;
   for (let attempt = 0; ; attempt++) {
     const head = (await gh(cfg, `/repos/${cfg.repo}/git/ref/heads/${enc(cfg.branch)}`)).object.sha;
     const base = (await gh(cfg, `/repos/${cfg.repo}/git/commits/${head}`)).tree.sha;
-    let list; try { list = await gh(cfg, `/repos/${cfg.repo}/contents/${dir.split("/").map(enc).join("/")}?ref=${head}`); } catch (e) { if (e.status === 404) list = []; else throw e; }
-    const names = (Array.isArray(list) ? list : []).map(x => x.name).filter(n => /^\d{4}-\d{2}-\d{2}-\d{4}\.md$/.test(n));
+    const b = await build(head); if (!b) return null;
+    const nt = await ghw(cfg, "POST", "/git/trees", { base_tree: base, tree: b.tree });
+    const nc = await ghw(cfg, "POST", "/git/commits", { message: b.message, tree: nt.sha, parents: [head] });
+    try { await ghw(cfg, "PATCH", `/git/refs/heads/${enc(cfg.branch)}`, { sha: nc.sha }); }
+    catch (e) { if (e.status === 422 && attempt < 2) continue; throw e; }
+    return b.out;
+  }
+}
+const tTitle = t => t.toets.fm.titel || t.toets.title;
+async function pushConcept(folder) {
+  const st = tGet(folder), t = tFind(folder), cfg = store.get("lezer.cfg", {});
+  if (!st || st.fase !== "bezig" || !t || SNAPSHOT || !(st.gew > (st.sync || 0))) return;
+  if (!cfg.token) throw new Error("Geen token ingesteld.");
+  const gew = st.gew, qs = parseToets(t.toets).vragen, text = buildConcept(st, qs, tTitle(t), folder, gew);
+  await ghCommit(cfg, async head => {
+    const rem = await fetchConcept(cfg, folder, head);
+    if (rem && rem.gew !== (st.base || 0)) throw Object.assign(new Error("Het concept in GitHub is intussen gewijzigd."), { conflict: rem });
+    if (!rem && st.base) throw Object.assign(new Error("Het concept in GitHub is verdwenen."), { conflict: "weg" });
+    return { tree: [{ path: `7-toetsen/${folder}/concept.md`, mode: "100644", type: "blob", content: text }], message: `Concept: ${tTitle(t)}, ${tCount(st, qs)} van ${qs.length} beantwoord` };
+  });
+  st.sync = Math.max(st.sync || 0, gew); st.base = gew; st.cerr = ""; tPut(folder, st); S.concepts[folder] = true;
+}
+async function syncConcept(f) {
+  delete CT[f];
+  if (CRUN[f]) { CRUN[f] = 2; return; }
+  CRUN[f] = 1; tSyncRefresh();
+  try { do { CRUN[f] = 1; await pushConcept(f); } while (CRUN[f] === 2); }
+  catch (e) {
+    const st = tGet(f);
+    if (st) { if (e.conflict) st.conflict = { kind: e.conflict === "weg" ? "weg" : "anders", rem: e.conflict === "weg" ? null : e.conflict }; else st.cerr = e.message || "Opslaan niet gelukt."; tPut(f, st); }
+  } finally { delete CRUN[f]; tSyncRefresh(); const st = tGet(f); if (st && st.conflict && location.hash === "#maak-" + f) route(); }
+}
+function queueSync(f, delay) { clearTimeout(CT[f]); CT[f] = setTimeout(() => syncConcept(f), delay); tSyncRefresh(); }
+function tFlush(f) { if (CT[f]) { clearTimeout(CT[f]); syncConcept(f); } }
+function markChanged(f, st, delay) { st.gew = Date.now(); st.cerr = ""; tPut(f, st); queueSync(f, delay); }
+function tResume() {
+  let keys = []; try { keys = Object.keys(localStorage).filter(k => k.startsWith("lezer.toets.")); } catch (e) {}
+  for (const k of keys) { const f = k.slice(12), st = tGet(f); if (st && st.fase === "bezig" && !st.conflict && st.gew > (st.sync || 0) && !CT[f] && !CRUN[f]) queueSync(f, 0); }
+}
+function tSyncHtml(f) {
+  const st = tGet(f); if (!st || st.fase !== "bezig" || !(st.gew > 0)) return "";
+  if (CRUN[f] || CT[f]) return "opslaan in GitHub…";
+  if (st.cerr) return `<span style="color:var(--open)">niet opgeslagen in GitHub</span> <button class="qlink" style="padding:0 0 0 6px" data-act="tsyncnow" data-folder="${esc(f)}">opnieuw</button>`;
+  return st.sync >= st.gew ? "opgeslagen in GitHub" : "nog niet opgeslagen in GitHub";
+}
+function tSyncRefresh() { const el = $("#tsync"), m = location.hash.match(/^#maak-(.+)$/); if (el && m) el.innerHTML = tSyncHtml(decodeURIComponent(m[1])); }
+function tApply(f, rem) { tPut(f, { v: rem.v, start: rem.start, answers: rem.answers, idx: rem.idx, view: "vraag", fase: "bezig", gew: rem.gew, sync: rem.gew, base: rem.gew }); }
+/* vergelijk lokaal met GitHub bij openen: geeft "adopted", "conflict" of false */
+async function tCheckRemote(f) {
+  const st = tGet(f), cfg = store.get("lezer.cfg", {}); if (!cfg.token || SNAPSHOT) return false;
+  let rem; try { rem = await fetchConcept(cfg, f); } catch (e) { return false; }
+  if (!st) { const was = !!S.concepts[f]; if (rem) S.concepts[f] = true; else delete S.concepts[f]; return was !== !!rem && "adopted"; }
+  if (st.fase !== "bezig" || st.conflict) return false;
+  if (!rem) { if (st.base) { st.conflict = { kind: "weg", rem: null }; tPut(f, st); return "conflict"; } return false; }
+  if (rem.gew === (st.base || 0)) return false;
+  if ((st.sync || 0) >= (st.gew || 0)) { tApply(f, rem); pill("Concept bijgewerkt vanuit GitHub", 2500); return "adopted"; }
+  st.conflict = { kind: "anders", rem }; tPut(f, st); return "conflict";
+}
+async function deleteConcept(f) {
+  const cfg = store.get("lezer.cfg", {}), t = tFind(f); if (!cfg.token || !t) return;
+  delete S.concepts[f];
+  try { await ghCommit(cfg, async head => (await listDir(cfg, `7-toetsen/${f}`, head)).includes("concept.md") ? { tree: [{ path: `7-toetsen/${f}/concept.md`, mode: "100644", type: "blob", sha: null }], message: `Concept: ${tTitle(t)} verwijderd` } : null); }
+  catch (e) { pill("Concept in GitHub niet verwijderd: " + e.message, 6000); }
+}
+function tConflict(t, st) {
+  const c = st.conflict, f = esc(t.folder), when = ms => new Date(ms).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const mine = Object.keys(st.answers).length;
+  if (c.kind === "weg") return `<h1 class="page">${esc(tTitle(t))}</h1><div class="card" style="margin:14px 0"><b>Het concept in GitHub is verdwenen.</b><p class="sn">Het is elders ingeleverd of verwijderd. Op dit apparaat staan ${mine} antwoorden.</p></div>
+    <div class="stack"><button class="btn" data-act="tkeeplocal" data-folder="${f}">Opnieuw opslaan vanaf dit apparaat</button><button class="btn ghost" data-act="tdiscard" data-folder="${f}">Weggooien</button></div>`;
+  const r = c.rem, n = Object.keys(r.answers).length;
+  return `<h1 class="page">${esc(tTitle(t))}</h1><div class="card" style="margin:14px 0"><b>Er staat een ander concept in GitHub.</b>
+    <dl class="kv" style="margin-top:10px"><dt>GitHub</dt><dd>${n} beantwoord · ${esc(when(r.gew))}${r.apparaat ? " · " + esc(r.apparaat) : ""}</dd><dt>Dit apparaat</dt><dd>${mine} beantwoord · ${st.gew ? esc(when(st.gew)) : "geen wijzigingen"}</dd></dl></div>
+    <div class="stack"><button class="btn" data-act="tuseremote" data-folder="${f}">Gebruik de versie uit GitHub</button><button class="btn ghost" data-act="tkeeplocal" data-folder="${f}">Houd deze versie (overschrijft GitHub)</button></div>`;
+}
+
+/* opslaan in GitHub: één nieuw bestand (en het concept verdwijnt in dezelfde commit) */
+async function savePoging(folder, u) {
+  const cfg = store.get("lezer.cfg", {});
+  if (!cfg.token) throw new Error("Geen token ingesteld. Zet het in Instellingen.");
+  const dir = `7-toetsen/${folder}/pogingen`;
+  return ghCommit(cfg, async head => {
+    const names = (await listDir(cfg, dir, head)).filter(n => /^\d{4}-\d{2}-\d{2}-\d{4}\.md$/.test(n));
     const N = names.length + 1;
     let at = new Date(u.at); while (names.includes(`${ymd(at)}-${hhmm(at)}.md`)) at = new Date(at.getTime() + 60000);
     const path = `${dir}/${ymd(at)}-${hhmm(at)}.md`, text = buildPoging(u, N, at);
-    const nt = await ghw(cfg, "POST", "/git/trees", { base_tree: base, tree: [{ path, mode: "100644", type: "blob", content: text }] });
-    const nc = await ghw(cfg, "POST", "/git/commits", { message: `Toets: ${u.titel}, poging ${N}`, tree: nt.sha, parents: [head] });
-    try { await ghw(cfg, "PATCH", `/git/refs/heads/${enc(cfg.branch)}`, { sha: nc.sha }); }
-    catch (e) { if (e.status === 422 && attempt < 2) continue; throw e; }
-    return { path, N, text };
-  }
+    const tree = [{ path, mode: "100644", type: "blob", content: text }];
+    if ((await listDir(cfg, `7-toetsen/${folder}`, head)).includes("concept.md")) tree.push({ path: `7-toetsen/${folder}/concept.md`, mode: "100644", type: "blob", sha: null });
+    return { tree, message: `Toets: ${u.titel}, poging ${N}`, out: { path, N, text } };
+  });
 }
 async function doSave(folder) {
   const st = tGet(folder); if (!st || !st.uitslag || st.saved || S.submitting) return;
   S.submitting = folder; st.err = ""; route();
   try {
     const r = await savePoging(folder, st.uitslag);
-    st.saved = { path: r.path, N: r.N }; tPut(folder, st);
+    st.saved = { path: r.path, N: r.N }; tPut(folder, st); delete S.concepts[folder];
     S.newFiles = S.newFiles || {}; S.newFiles[r.path] = r.text; ingest(S.files || {});
     pill("Poging opgeslagen in GitHub", 3000); loadLive(true, true);
   } catch (e) { st.err = e.message || "Opslaan niet gelukt."; tPut(folder, st); }
   finally { S.submitting = null; route(); }
 }
-function submitToets(folder) {
+async function submitToets(folder) {
   const t = tFind(folder), st = tGet(folder); if (!t || !st) return;
+  clearTimeout(CT[folder]); delete CT[folder];
+  if (CRUN[folder]) await new Promise(r => { const i = setInterval(() => { if (!CRUN[folder]) { clearInterval(i); r(); } }, 150); });
+  if (await tCheckRemote(folder)) { route(); return; }
   const P = parseToets(t.toets), now = Date.now();
   st.uitslag = { titel: t.toets.fm.titel || t.toets.title, folder, versie: st.v, at: now, duur: Math.max(1, Math.round((now - st.start) / 60000)), maximaal: t.toets.fm.maximaal || P.totaal, rows: P.vragen.map(q => gradeQ(q, st.answers[q.id])) };
   st.fase = "klaar"; st.saved = null; st.err = ""; st.filter = "alle"; st.ask = ""; tPut(folder, st);
@@ -1012,17 +1131,22 @@ function submitToets(folder) {
 const curQ = f => { const t = tFind(f), st = tGet(f); if (!t || !st) return null; const qs = parseToets(t.toets).vragen; return { t, st, qs, q: qs[Math.max(0, Math.min(st.idx || 0, qs.length - 1))] }; };
 const TACT = {
   tgo(b) { const f = b.dataset.folder, st = tGet(f); if (st && st.fase === "klaar" && st.saved) tPut(f, null); location.hash = "maak-" + f; },
-  tbegin(b) { const f = b.dataset.folder, t = tFind(f); if (!t) return; tPut(f, { v: t.toets.fm.versie, start: Date.now(), answers: {}, idx: 0, view: "vraag", fase: "bezig" }); route(); window.scrollTo(0, 0); },
+  tbegin(b) { const f = b.dataset.folder, t = tFind(f); if (!t) return; if (S.concepts[f]) deleteConcept(f); tPut(f, { v: t.toets.fm.versie, start: Date.now(), answers: {}, idx: 0, view: "vraag", fase: "bezig", gew: 0, sync: 0, base: 0 }); route(); window.scrollTo(0, 0); },
+  async tadopt(b) { const f = b.dataset.folder, cfg = store.get("lezer.cfg", {}); try { const rem = await fetchConcept(cfg, f); if (!rem) { delete S.concepts[f]; pill("Geen concept meer in GitHub", 3000); } else tApply(f, rem); } catch (e) { pill(e.message, 5000); } route(); window.scrollTo(0, 0); },
+  tsyncnow(b) { const f = b.dataset.folder, st = tGet(f); if (st) { st.cerr = ""; tPut(f, st); } queueSync(f, 0); },
+  tuseremote(b) { const f = b.dataset.folder, st = tGet(f); if (st && st.conflict && st.conflict.rem) tApply(f, st.conflict.rem); route(); },
+  tkeeplocal(b) { const f = b.dataset.folder, st = tGet(f); if (!st || !st.conflict) return; st.base = st.conflict.rem ? st.conflict.rem.gew : 0; st.conflict = null; markChanged(f, st, 0); route(); },
+  tdiscard(b) { tPut(b.dataset.folder, null); route(); },
   tpick(b) {
     const c = curQ(b.dataset.folder); if (!c) return; const v = b.dataset.val;
     if (c.q.type === "meerdere-juist") { const cur = c.st.answers[c.q.id] || [], n = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v].sort(); if (n.length) c.st.answers[c.q.id] = n; else delete c.st.answers[c.q.id]; }
     else c.st.answers[c.q.id] = v;
-    tPut(b.dataset.folder, c.st); const y = window.scrollY; route(); window.scrollTo(0, y);
+    markChanged(b.dataset.folder, c.st, 0); const y = window.scrollY; route(); window.scrollTo(0, y);
   },
-  tprev(b) { const c = curQ(b.dataset.folder); if (!c || c.st.idx <= 0) return; c.st.idx--; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
-  tnext(b) { const c = curQ(b.dataset.folder); if (!c) return; if (c.st.idx >= c.qs.length - 1) { c.st.view = "overzicht"; c.st.ask = ""; } else c.st.idx++; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
-  toverzicht(b) { const c = curQ(b.dataset.folder); if (!c) return; c.st.view = "overzicht"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
-  tgoto(b) { const c = curQ(b.dataset.folder); if (!c) return; c.st.idx = Number(b.dataset.idx) || 0; c.st.view = "vraag"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  tprev(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c || c.st.idx <= 0) return; c.st.idx--; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  tnext(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c) return; if (c.st.idx >= c.qs.length - 1) { c.st.view = "overzicht"; c.st.ask = ""; } else c.st.idx++; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  toverzicht(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c) return; c.st.view = "overzicht"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
+  tgoto(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c) return; c.st.idx = Number(b.dataset.idx) || 0; c.st.view = "vraag"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
   tsubmit(b) {
     const c = curQ(b.dataset.folder); if (!c) return;
     if (tCount(c.st, c.qs) < c.qs.length && c.st.ask !== "submit") { c.st.ask = "submit"; tPut(b.dataset.folder, c.st); route(); return; }
@@ -1030,7 +1154,7 @@ const TACT = {
   },
   treset(b) {
     const f = b.dataset.folder, st = tGet(f); if (!st) return;
-    if (b.dataset.now || st.ask === "reset") { tPut(f, null); route(); window.scrollTo(0, 0); } else { st.ask = "reset"; tPut(f, st); route(); }
+    if (b.dataset.now || st.ask === "reset") { clearTimeout(CT[f]); delete CT[f]; tPut(f, null); if (S.concepts[f] || st.base) deleteConcept(f); route(); window.scrollTo(0, 0); } else { st.ask = "reset"; tPut(f, st); route(); }
   },
   tretry(b) { doSave(b.dataset.folder); },
   tfilter(b) { const st = tGet(b.dataset.folder); if (!st) return; st.filter = b.dataset.val; tPut(b.dataset.folder, st); route(); },
@@ -1040,7 +1164,7 @@ document.addEventListener("input", e => {
   if (e.target.id !== "tin") return;
   const m = location.hash.match(/^#maak-(.+)$/), c = m && curQ(decodeURIComponent(m[1])); if (!c) return;
   if (e.target.value.trim()) c.st.answers[c.q.id] = e.target.value; else delete c.st.answers[c.q.id];
-  tPut(c.t.folder, c.st);
+  markChanged(c.t.folder, c.st, 2500);
 });
 
 /* ---------- router ---------- */
@@ -1059,12 +1183,14 @@ function route() {
   const app = $("#app"), h = location.hash.slice(1);
   let view, info = {}, tab = "start";
   if (S.setup) { app.innerHTML = viewSetup().html; return; }
+  if (!h.startsWith("maak-")) S.checked = {};
   if (!h) { view = viewStart(); }
   else if (VIEWS[h]) {
     info = VIEWS[h]; tab = info.tab;
     view = { start: viewStart, leerpad: viewLeerpad, projecten: viewProjecten, meer: viewMeer }[h.slice(2)] || ({ zoek: viewZoek, doelen: viewDoelen, logboek: viewLogboek, toetsen: viewToetsen, over: viewOver, instellingen: viewInstellingen }[h.slice(2)]);
     view = view();
   } else if (h.startsWith("maak-")) {
+    { const f0 = decodeURIComponent(h.slice(5)); if (!S.checked[f0] && S.docs.length) { S.checked[f0] = true; tCheckRemote(f0).then(c => { if (c && location.hash === "#" + h) route(); }); } }
     view = viewMaak(decodeURIComponent(h.slice(5))); info = { parent: view.parent, title: view.title }; tab = "meer";
   } else if (S.bySlug[h]) {
     const d = S.bySlug[h]; view = viewDoc(d); info = { parent: view.parent, title: view.title };
@@ -1147,6 +1273,7 @@ async function loadLive(force, silent) {
   try {
     if (!silent) pill("Laden…");
     const tree = await gh(cfg, `/repos/${cfg.repo}/git/trees/${encodeURIComponent(cfg.branch)}?recursive=1`);
+    S.concepts = {}; for (const t of tree.tree) { const m = t.path.match(/^7-toetsen\/([^/]+)\/concept\.md$/); if (m) S.concepts[m[1]] = true; }
     const entries = tree.tree.filter(t => t.type === "blob" && includeFile(t.path));
     const cache = (await idbGet(key)) || { shas: {}, files: {} };
     const files = {}, shas = {}; let done = 0, i = 0;
@@ -1164,7 +1291,7 @@ async function loadLive(force, silent) {
       const cs = await gh(cfg, `/repos/${cfg.repo}/commits?sha=${encodeURIComponent(cfg.branch)}&per_page=100`);
       commits = cs.map(c => ({ sha: c.sha.slice(0, 7), date: c.commit.author.date, msg: c.commit.message.split("\n")[0] }));
     } catch (e) {}
-    const sig = Object.keys(shas).sort().map(k => k + shas[k]).join("|") + "#" + (commits[0] ? commits[0].sha : "");
+    const sig = Object.keys(shas).sort().map(k => k + shas[k]).join("|") + "#" + (commits[0] ? commits[0].sha : "") + "#" + Object.keys(S.concepts).join(",");
     const same = silent && S.sig === sig && S.docs.length;
     S.sig = sig; S.meta = { mode: "live", when: clock() }; S.setup = false;
     if (same) refreshStatus();
@@ -1187,11 +1314,11 @@ async function boot() {
   const cached = await idbGet("docs:" + cfg.repo + "@" + cfg.branch);
   if (cached) { ingest(cached.files); S.meta = { mode: "live", when: "uit cache" }; route(); }
   await syncAll(false, true);
-  scheduleFlush();
+  scheduleFlush(); tResume();
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushPending(); });
   window.addEventListener("pagehide", () => { flushPending(); });
   setInterval(() => { if (document.visibilityState === "visible") syncAll(true); }, SYNC_MS);
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && Date.now() - (S.lastSync || 0) >= SYNC_MS) syncAll(true); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { tResume(); if (Date.now() - (S.lastSync || 0) >= SYNC_MS) syncAll(true); } });
 }
 boot();
 </script>
