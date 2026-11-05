@@ -321,6 +321,57 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 }
 @media (min-width: 900px) and (max-width: 1179px) { .toc { display: none; } .desk { padding-left: 32px; padding-right: 32px; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: auto; } }
+
+/* projecttijdlijn en aandachtspunten */
+.tl-top { display: flex; flex-direction: column; gap: 12px; margin: 14px 0 4px; }
+.tl-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); align-items: center; }
+.tl-n { font-weight: 600; color: var(--ink); }
+.tl-li { display: inline-flex; align-items: center; gap: 6px; }
+.tdot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
+.tdot.hk-school, .tl-card.herk-school { --hk: var(--accent); } .tdot.hk-eigen, .tl-card.herk-eigen { --hk: var(--done); } .tdot.hk-werk, .tl-card.herk-werk { --hk: var(--open); }
+.tdot.hk-school { background: var(--accent); } .tdot.hk-eigen { background: var(--done); } .tdot.hk-werk { background: var(--open); } .tdot.hk-log { background: transparent; border: 2px dashed var(--muted); }
+.chip.hk-school { background: var(--chip); color: var(--accent); font-weight: 600; } .chip.hk-eigen { background: var(--done-bg); color: var(--done); font-weight: 600; } .chip.hk-werk { background: var(--open-bg); color: var(--open); font-weight: 600; }
+.tl { list-style: none; margin: 8px 0 0; padding: 0; }
+.tl-yh { display: flex; align-items: baseline; gap: 10px; margin: 24px 0 8px; }
+.tl-yh h2 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
+.tl-m { margin: 0; padding: 0 0 4px 18px; border-left: 2px solid var(--line); position: relative; }
+.tl-mn { font: 600 12px var(--f-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 6px 0 8px; position: relative; }
+.tl-mn::before { content: ""; position: absolute; left: -26px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+.tl-cards { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.tl-card { display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--hk, var(--muted)); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.tl-card.log { border-left-style: dashed; }
+.tl-card:hover { border-color: var(--accent); border-left-color: var(--hk, var(--accent)); }
+.tl-h { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.tl-h .t { font-weight: 600; overflow-wrap: anywhere; }
+.tl-b { display: flex; gap: 6px; flex: none; }
+.ctx { font-size: 12.5px; color: var(--muted); }
+.tl-card .m { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.ap-seg { margin-top: 14px; }
+.ap-seg button { font-size: 13px; padding: 7px 4px; } .apn { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.ap-seg button[aria-pressed="true"] .apn { color: var(--accent); }
+.ap-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.ap-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ap-t { font-weight: 600; text-decoration: none; color: var(--ink); overflow-wrap: anywhere; } .ap-t:hover { color: var(--accent); }
+.ap-card .m { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.ap-r { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding-top: 6px; border-top: 1px solid var(--line); font-size: 14.5px; }
+.ap-r .todo { background: var(--open-bg); color: var(--open); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+.ap-r .sn { flex: none; font-family: var(--f-mono); }
+.ap-h { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; } .ap-in { font-size: 14px; } .ap-in a { overflow-wrap: anywhere; }
+.ap-f { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 4px; }
+.sidebadge { margin-left: auto; font: 600 11px var(--f-mono); background: var(--open-bg); color: var(--open); border-radius: 999px; padding: 1px 7px; }
+@media (min-width: 900px) {
+  .tl-top { flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  .tl-top .seg { min-width: 280px; }
+  .tl-y { border-left: 2px solid var(--line); padding-left: 24px; margin-left: 4px; position: relative; }
+  .tl-yh { margin-top: 28px; }
+  .tl-m { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 0 12px; border-left: 0; padding: 0 0 6px; }
+  .tl-mn { margin: 12px 0 0; } .tl-mn::before { display: none; }
+  .tl-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .ap-seg { max-width: 560px; }
+  .ap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; align-items: start; }
+  .ap-f { flex-direction: row; align-items: center; } .ap-f input { max-width: 320px; } .ap-f .seg { min-width: 300px; }
+  .desk main.pg-aandacht { max-width: 1040px; }
+}
 </style>
 
 <div class="wrap" id="app"></div>
@@ -328,7 +379,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-05T19:58Z";
+const BUILD = "2026-11-05T21:45Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -352,6 +403,8 @@ const IC = {
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  timeline: '<path d="M6 4v16"/><circle cx="6" cy="7" r="1.7"/><circle cx="6" cy="17" r="1.7"/><path d="M11 7h8M11 17h8"/>',
+  alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
   target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/>',
   book: '<path d="M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M5 17a3 3 0 013-3h10"/>',
   quiz: '<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/>',
@@ -387,10 +440,10 @@ function fmVal(v) {
 }
 function slugOf(path) { return path.replace(/\.md$/, "").toLowerCase().replace(/\//g, "--").replace(/[^a-z0-9-]/g, "-"); }
 function parseDoc(path, text) {
-  let fm = {}, body = text;
+  let fm = {}, body = text, off = 0;
   const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (m) {
-    body = text.slice(m[0].length);
+    body = text.slice(m[0].length); off = (m[0].match(/\n/g) || []).length;
     for (const line of m[1].split(/\r?\n/)) {
       const i = line.indexOf(":");
       if (i < 1 || /^\s/.test(line)) continue;
@@ -399,13 +452,13 @@ function parseDoc(path, text) {
   }
   const h1 = body.match(/^#\s+(.+)$/m);
   const base = path.split("/").pop().replace(/\.md$/, "");
-  return { path, slug: slugOf(path), fm, body, section: path.split("/")[0],
+  return { path, slug: slugOf(path), fm, body, off, section: path.split("/")[0],
     title: fm.titel || (h1 && h1[1]) || base, type: fm.type || "", folder: path.split("/").slice(0, -1).join("/") };
 }
 function includeFile(p) {
   if (!p.endsWith(".md")) return false;
   const top = p.split("/")[0], name = p.split("/").pop();
-  if (name === "CLAUDE.md" || name === "concept.md") return false;
+  if (name === "CLAUDE.md" || name === "concept.md" || p === "inbox.md") return false;
   if (!p.includes("/") && name === "README.md") return false;
   return !["11-templates", "9-export", "10-inbox"].includes(top) && !top.startsWith(".");
 }
@@ -419,6 +472,7 @@ function ingest(files) {
   for (const d of S.docs) { S.byPath[d.path] = d; S.bySlug[d.slug] = d; }
   S.topics = S.docs.filter(d => SECTIONS[d.section] && ["kennis", "technologie", "werkwijze"].includes(d.type))
     .sort((a, b) => ord(a) - ord(b) || a.title.localeCompare(b.title));
+  S.ap = null; { const ib = INBOX_PATHS.find(p => files[p] != null); S.inbox = ib ? { path: ib, text: String(files[ib]) } : null; }
   S.byTitle = {};
   for (const t of S.topics) S.byTitle[t.title.toLowerCase()] = t;
   const now = Date.now();
@@ -506,6 +560,123 @@ function md(src, ctx) {
   return out.join("\n");
 }
 
+/* ---------- aandachtspunten: TODO's, kennisgaten en inbox (zelfde betekenis als in kennisbank-site) ---------- */
+const INBOX_PATHS = ["10-inbox/inbox.md", "inbox.md"];
+const normNaam = s => String(s).toLowerCase().replace(/\s+/g, " ").trim();
+const alsT = v => Array.isArray(v) ? v.join(", ") : v == null ? "" : String(v);
+/* Het document opgedeeld in alinea's (zonder codeblokken), met het regelnummer in het bestand. */
+function aBlokken(d) {
+  const uit = []; let cur = null, fence = false;
+  const flush = () => { if (cur) uit.push(cur); cur = null; };
+  d.body.split("\n").forEach((raw, i) => {
+    const line = raw.replace(/\r$/, ""), ln = i + 1 + (d.off || 0);
+    if (/^\s*(```|~~~)/.test(line)) { flush(); fence = !fence; return; }
+    if (fence) return;
+    if (/^\s*$/.test(line) || /^\s*(---|\*\*\*|___)\s*$/.test(line)) { flush(); return; }
+    if (/^\s*</.test(line)) { flush(); return; }
+    let m;
+    if (/^\s{0,3}#{1,6}\s/.test(line)) { flush(); cur = { t: line.replace(/^\s{0,3}#{1,6}\s+/, ""), ln }; flush(); return; }
+    if (/^\s*\|.*\|\s*$/.test(line)) { flush(); if (!/^\s*\|?\s*:?-{2,}/.test(line)) uit.push({ t: line.trim().replace(/^\||\|$/g, ""), ln, tabel: true }); return; }
+    if ((m = line.match(/^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?(.*)$/))) { flush(); cur = { t: m[1], ln }; return; }
+    if (/^\s*>/.test(line)) { const t = line.replace(/^\s*>\s?/, ""); if (cur && cur.quote) cur.t += "\n" + t; else { flush(); cur = { t, ln, quote: true }; } return; }
+    if (cur) cur.t += "\n" + line.trim(); else cur = { t: line.trim(), ln };
+  });
+  flush(); return uit;
+}
+const A_SEG = /(`[^`\n]*`|!?\[[^\]\n]*\]\([^)\n]*\)|\*\*[^*]+?\*\*|__[^_]+?__|\*[^*\s][^*]*?\*)/;
+function aKnopen(t) {
+  const uit = []; let pos = 0;
+  for (const part of t.split(A_SEG)) {
+    let k = "text", v = part;
+    if (A_SEG.test(part) && part) {
+      if (part[0] === "`") k = "code"; else if (part.startsWith("![")) k = "img"; else if (part[0] === "[") { k = "link"; v = part.slice(1, part.indexOf("]")); } else if (part.startsWith("**") || part.startsWith("__")) { k = "strong"; v = part.slice(2, -2); } else { k = "em"; v = part.slice(1, -1); }
+    }
+    if (part !== "") uit.push({ k, v, pos }); pos += part.length;
+  }
+  return uit;
+}
+function aDoc(d) {
+  if (d._a) return d._a;
+  const a = { todos: [], gaten: [], ontbrekend: 0 };
+  const scan = (value, sibs, i, ln) => {
+    const pos = value.indexOf("(nog geen bestand)");
+    if (pos !== -1) {
+      const naamTekst = value.slice(0, pos).trimEnd(); let naam = "";
+      if (naamTekst.trim() === "") { const v = sibs[i - 1]; if (v && (v.k === "strong" || v.k === "em" || v.k === "code")) naam = v.v.trim(); }
+      else { const kaal = naamTekst.trimStart(), m = /^(?:en|of|&|\/|,|;)\s+/i.exec(kaal); naam = (m ? kaal.slice(m[0].length) : kaal).trim(); }
+      if (naam) a.gaten.push({ naam, regel: ln });
+    }
+    const td = /\bTODO:[^\n]*/.exec(value);
+    if (td) a.todos.push({ tekst: td[0].trim(), regel: ln });
+    if (/\bOntbrekende informatie:[^\n]*/.test(value)) a.ontbrekend++;
+  };
+  for (const b of aBlokken(d)) {
+    const lijsten = b.tabel ? b.t.split("|").map(c => c.trim()) : [b.t];
+    for (const cel of lijsten) {
+      const kn = aKnopen(cel);
+      kn.forEach((n, i) => {
+        const ln = b.ln + (cel.slice(0, n.pos).match(/\n/g) || []).length;
+        if (n.k === "text") scan(n.v, kn, i, ln); else if (n.k === "strong" || n.k === "em" || n.k === "link") scan(n.v, [], 0, ln);
+      });
+    }
+  }
+  return (d._a = a);
+}
+function aandachtData() {
+  if (S.ap) return S.ap;
+  const todos = [], perDoc = new Map(), per = new Map();
+  for (const d of S.docs) {
+    const a = aDoc(d);
+    for (const t of a.todos) { todos.push({ d, ...t }); perDoc.set(d, [...(perDoc.get(d) || []), t]); }
+    for (const g of a.gaten) { const k = normNaam(g.naam), e = per.get(k) || { w: new Map(), aantal: 0, docs: new Set() }; e.aantal++; e.docs.add(d); e.w.set(g.naam, (e.w.get(g.naam) || 0) + 1); per.set(k, e); }
+  }
+  const bestaat = new Map();
+  for (const d of S.docs) { if (/(^|\/)README\.md$/.test(d.path)) continue; for (const k of [normNaam(d.title), normNaam(d.path.split("/").pop().replace(/\.md$/i, ""))]) if (k && !bestaat.has(k)) bestaat.set(k, d); }
+  const gaten = [...per.entries()].map(([sleutel, e]) => ({ sleutel, naam: [...e.w.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0][0], aantal: e.aantal, docs: [...e.docs], bestaatAls: bestaat.get(sleutel) || null }))
+    .sort((x, y) => y.aantal - x.aantal || x.sleutel.localeCompare(y.sleutel, "nl"));
+  const txt = S.inbox ? S.inbox.text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "").replace(/^\s*# .*\n/, "") : "";
+  const inbox = { bestaat: !!S.inbox, pad: S.inbox ? S.inbox.path : INBOX_PATHS[0], tekst: txt, open: (txt.match(/^\s*[-*]\s+\[ \]/gm) || []).length, klaar: (txt.match(/^\s*[-*]\s+\[[xX]\]/gm) || []).length };
+  return (S.ap = { todos, perDoc: [...perDoc.entries()], gaten, inbox, aantal: todos.length + inbox.open });
+}
+
+/* ---------- projecttijdlijn (zelfde indeling als in kennisbank-site) ---------- */
+const MAANDEN = ["", "januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+const MND_KORT = ["", "jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+const schoneNaam = n => { let x = n.replace(/\.md$/i, "").replace(/^\d{4}-\d{2}-/, "").replace(/^\d+-/, "").replace(/[-_]+/g, " ").trim(); return x ? x.charAt(0).toUpperCase() + x.slice(1) : n; };
+function docDatum(d) { const v = alsT(d.fm.bijgewerkt || d.fm.aangemaakt || d.fm.datum); return /^\d{4}-\d{2}/.test(v) ? v : ""; }
+function projectMaand(d) {
+  for (const x of d.path.split("/").slice(0, -1).reverse()) { const m = /^(\d{4})-(\d{2})-/.exec(x); if (m) return m[1] + "-" + m[2]; }
+  const m = /^(\d{4})-(\d{2})/.exec(alsT(d.fm.periode)); if (m) return m[1] + "-" + m[2];
+  return docDatum(d).slice(0, 7);
+}
+function mapTitel(pad) {
+  const r = S.byPath[pad + "/README.md"]; if (r) return r.title;
+  const p = S.byPath[pad + "/project.md"]; if (p) return p.title;
+  return schoneNaam(pad.split("/").pop());
+}
+function tlContext(d) { const delen = d.path.split("/").slice(0, -1), mid = delen.slice(1, -1), uit = []; let pad = delen[0]; for (const x of mid) { pad += "/" + x; uit.push(mapTitel(pad)); } return uit; }
+function tlData(nieuwsteEerst) {
+  const col = new Intl.Collator("nl", { numeric: true, sensitivity: "base" }), dirNaam = d => d.path.split("/").slice(-2, -1)[0] || "";
+  const projecten = S.docs.filter(d => /^4-projecten\/(?:.*\/)?project\.md$/.test(d.path)).map(d => ({ d, soort: "project", datum: projectMaand(d), dag: "", herkomst: (alsT(d.fm.herkomst).trim().toLowerCase() || "onbekend"), context: tlContext(d), status: "" }))
+    .sort((a, b) => a.datum.localeCompare(b.datum) || col.compare(dirNaam(a.d), dirNaam(b.d)) || col.compare(a.d.path, b.d.path));
+  const logboek = S.docs.filter(d => d.type === "logboek" && !/(^|\/)README\.md$/.test(d.path)).map(d => { const v = alsT(d.fm.datum).trim(), dag = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : docDatum(d); return { d, soort: "logboek", datum: dag.slice(0, 7), dag, herkomst: "", context: [], status: alsT(d.fm.status) }; })
+    .sort((a, b) => b.dag.localeCompare(a.dag) || col.compare(a.d.path, b.d.path));
+  const sleutel = i => i.dag || i.datum + "-00";
+  const oud = [...projecten, ...logboek].sort((a, b) => sleutel(a).localeCompare(sleutel(b)) || (a.soort === b.soort ? 0 : a.soort === "project" ? -1 : 1));
+  const items = nieuwsteEerst ? [...oud].reverse() : oud, jaren = [];
+  for (const p of items) {
+    const jaar = p.datum.slice(0, 4); let j = jaren[jaren.length - 1];
+    if (!j || j.jaar !== jaar) { j = { jaar, maanden: [], aantal: 0 }; jaren.push(j); }
+    let m = j.maanden[j.maanden.length - 1];
+    if (!m || m.sleutel !== p.datum) { m = { sleutel: p.datum, maand: parseInt(p.datum.slice(5, 7), 10) || 0, items: [] }; j.maanden.push(m); }
+    m.items.push(p); j.aantal++;
+  }
+  const tel = new Map(); for (const p of projecten) tel.set(p.herkomst, (tel.get(p.herkomst) || 0) + 1);
+  const st = new Map(); for (const l of logboek) st.set(l.status || "geen status", (st.get(l.status || "geen status") || 0) + 1);
+  return { jaren, items, projecten, logboek, van: oud[0] ? oud[0].datum : "", tot: oud.length ? oud[oud.length - 1].datum : "",
+    perHerkomst: [...tel.entries()].map(([herkomst, aantal]) => ({ herkomst, aantal })).sort((a, b) => b.aantal - a.aantal), perStatus: [...st.entries()].map(([status, aantal]) => ({ status, aantal })).sort((a, b) => b.aantal - a.aantal) };
+}
+
 /* ---------- hulpjes ---------- */
 const fmtDate = (s, long) => {
   if (!s) return "";
@@ -533,7 +704,8 @@ function topicRow(d) {
 
 /* ---------- views ---------- */
 const VIEWS = {
-  "v-start": { tab: "start" }, "v-leerpad": { tab: "leerpad" }, "v-projecten": { tab: "projecten" }, "v-meer": { tab: "meer" },
+  "v-start": { tab: "start" }, "v-leerpad": { tab: "leerpad" }, "v-projecten": { tab: "meer", parent: "v-meer", title: "Projecten" }, "v-meer": { tab: "meer" },
+  "v-tijdlijn": { tab: "tijdlijn" }, "v-aandacht": { tab: "meer", parent: "v-meer", title: "Aandachtspunten" },
   "v-zoek": { tab: "meer", parent: "v-meer", title: "Zoeken" }, "v-doelen": { tab: "meer", parent: "v-meer", title: "Doelen" },
   "v-logboek": { tab: "meer", parent: "v-meer", title: "Logboek" }, "v-toetsen": { tab: "meer", parent: "v-meer", title: "Toetsen" },
   "v-over": { tab: "meer", parent: "v-meer", title: "Over de kennisbank en de app" }, "v-instellingen": { tab: "meer", parent: "v-meer", title: "Instellingen" }
@@ -734,7 +906,7 @@ function viewProjecten() {
 function viewMeer() {
   const item = (h, t, s) => `<a class="row" href="#${h}"><span class="main"><span class="t">${t}</span><br><span class="m">${s}</span></span></a>`;
   return { html: `<h1 class="page">Meer</h1><div class="card pad0 list" style="margin-top:14px">
-    ${item("v-zoek", "Zoeken", "in titels, tags en tekst")}${item("v-doelen", "Doelen", "wat ik wil bereiken")}${item("v-logboek", "Logboek", "momentopnames en reflecties")}
+    ${item("v-zoek", "Zoeken", "in titels, tags en tekst")}${item("v-aandacht", "Aandachtspunten", "TODO's, kennisgaten en inbox")}${item("v-projecten", "Projecten", "alle projecten als lijst")}${item("v-doelen", "Doelen", "wat ik wil bereiken")}${item("v-logboek", "Logboek", "momentopnames en reflecties")}
     ${item("v-toetsen", "Toetsen", "vragen, pogingen en scores")}${item("v-over", "Over de kennisbank en de app", "wijzigingen, versie en voortgang")}${item("v-instellingen", "Instellingen", "weergave en verbinding")}</div>` };
 }
 function snippet(d, words) {
@@ -839,6 +1011,57 @@ function loadAppLog() {
     if (location.hash === "#v-over") route();
   })();
 }
+/* ---------- weergave: projecttijdlijn en aandachtspunten ---------- */
+const dagLabel = dag => { const [j, m, d] = dag.split("-"), n = parseInt(m, 10); return n >= 1 && n <= 12 ? `${parseInt(d, 10)} ${MND_KORT[n]} ${j}` : dag; };
+const hk = h => ({ school: "school", eigen: "eigen", werk: "werk" }[h] || "onbekend");
+function tlCard(p) {
+  const d = p.d;
+  if (p.soort === "logboek") return `<a class="tl-card log" href="#${d.slug}"><span class="tl-h"><span class="t">${esc(d.title)}</span><span class="tl-b">${p.status ? `<span class="chip ${p.status === "afgerond" ? "done" : "open"}">${esc(p.status)}</span>` : ""}<span class="chip">logboek</span></span></span><span class="m">${esc(dagLabel(p.dag))}</span></a>`;
+  const f = d.fm, meta = [alsT(f.periode) && "periode " + alsT(f.periode), alsT(f.rol), alsT(f.cijfer) && "cijfer " + alsT(f.cijfer)].filter(Boolean).join(" · ");
+  return `<a class="tl-card herk-${hk(p.herkomst)}" href="#${d.slug}"><span class="tl-h"><span class="t">${esc(d.title)}</span><span class="tl-b"><span class="chip hk-${hk(p.herkomst)}">${esc(p.herkomst)}</span></span></span>${p.context.length ? `<span class="ctx">${esc(p.context.join(" › "))}</span>` : ""}${meta ? `<span class="m">${esc(meta)}</span>` : ""}</a>`;
+}
+function viewTijdlijn() {
+  const nieuw = UI.tl === "nieuw", tl = tlData(nieuw);
+  const seg = (val, l) => `<button data-act="set" data-key="tl" data-val="${val}" aria-pressed="${String((UI.tl || "oud") === val)}">${l}</button>`;
+  const label = s => { const [j, m] = s.split("-"), n = parseInt(m, 10); return n >= 1 && n <= 12 ? MAANDEN[n] + " " + j : s; };
+  const leg = `<div class="tl-leg"><span class="tl-n">${tl.projecten.length} projecten</span>${tl.perHerkomst.map(h => `<span class="tl-li"><i class="tdot hk-${hk(h.herkomst)}"></i>${esc(h.herkomst)} (${h.aantal})</span>`).join("")}${tl.logboek.length ? `<span class="tl-li"><i class="tdot hk-log"></i><b>${tl.logboek.length} logboek</b>${esc(tl.perStatus.map(p => " · " + p.aantal + " " + p.status).join(""))}</span>` : ""}</div>`;
+  let body;
+  if (!tl.items.length) body = '<div class="empty"><b>Niets gevonden</b>Geen projecten of logboekitems.</div>';
+  else body = `<ol class="tl">${tl.jaren.map(j => `<li class="tl-y"><div class="tl-yh"><h2>${j.jaar}</h2><span class="sn">${j.aantal} ${j.aantal === 1 ? "item" : "items"}</span></div>${j.maanden.map(m => `<div class="tl-m"><div class="tl-mn">${esc(MAANDEN[m.maand] || m.sleutel)}</div><div class="tl-cards">${m.items.map(tlCard).join("")}</div></div>`).join("")}</li>`).join("")}</ol>`;
+  return { html: `<h1 class="page">Projecttijdlijn</h1><p class="sub">Alle projecten en logboekitems op één lijn${tl.items.length ? `: ${esc(label(tl.van))} tot ${esc(label(tl.tot))}` : ""}.</p>
+    <div class="tl-top">${leg}<div class="seg" role="group" aria-label="Volgorde">${seg("oud", "Oudste eerst")}${seg("nieuw", "Nieuwste eerst")}</div></div>${body}
+    <p style="margin:24px 0 0"><a class="btn ghost" href="#v-projecten">Alle projecten als lijst</a></p>` };
+}
+function apTodos(a) {
+  if (!a.perDoc.length) return '<div class="empty"><b>Geen open TODO\'s</b>Alles is opgepakt.</div>';
+  return `<p class="sn">Open vragen in ${a.perDoc.length} bestanden. Alleen <code>TODO:</code> buiten code telt mee.</p><div class="ap-grid">${a.perDoc.map(([d, ts]) => `<div class="card ap-card"><a class="ap-t" href="#${d.slug}">${esc(d.title)}</a><div class="m">${esc(d.path)}</div>${ts.map(t => `<div class="ap-r"><span class="todo">${esc(t.tekst)}</span><span class="sn">regel ${t.regel}</span></div>`).join("")}</div>`).join("")}</div>`;
+}
+function apGatenLijst(a) {
+  const q = normNaam(UI.gq || ""); let g = a.gaten.filter(x => !q || x.sleutel.includes(q));
+  if (UI.gs === "naam") g = [...g].sort((x, y) => x.sleutel.localeCompare(y.sleutel, "nl"));
+  if (!g.length) return `<div class="empty"><b>Geen kennisgaten</b>${q ? "Niets gevonden voor “" + esc(q) + "”." : "Er staat nergens “(nog geen bestand)”."}</div>`;
+  return `<div class="ap-grid">${g.map(x => `<div class="card ap-card"><div class="ap-h"><b>${esc(x.naam)}</b><span class="chip">${x.aantal}×</span>${x.bestaatAls ? `<a class="chip done" href="#${x.bestaatAls.slug}">bestaat al als ${esc(x.bestaatAls.title)}</a>` : ""}</div><div class="m">genoemd in</div><div class="ap-in">${[...x.docs].sort((p, r) => projectMaand(p).localeCompare(projectMaand(r)) || p.path.localeCompare(r.path)).slice(0, 8).map(d => `<a href="#${d.slug}">${esc(d.title)}</a>`).join(", ")}${x.docs.length > 8 ? ` <span class="sn">en ${x.docs.length - 8} andere</span>` : ""}</div></div>`).join("")}</div>`;
+}
+function apGaten(a) {
+  const tot = a.gaten.reduce((n, g) => n + g.aantal, 0), seg = (val, l) => `<button data-act="set" data-key="gs" data-val="${val}" aria-pressed="${String((UI.gs || "aantal") === val)}">${l}</button>`;
+  return `<p class="sn">Onderwerpen die in een project zijn genoemd met <code>(nog geen bestand)</code>. ${tot} vermeldingen.</p>
+    <div class="ap-f"><input id="gq" type="search" placeholder="Zoeken in namen" value="${esc(UI.gq || "")}" autocomplete="off" autocapitalize="off"><div class="seg" role="group" aria-label="Sorteren">${seg("aantal", "Meeste vermeldingen")}${seg("naam", "Naam")}</div></div><div id="gl">${apGatenLijst(a)}</div>`;
+}
+function apInbox(a) {
+  const ib = a.inbox;
+  if (!ib.bestaat) return `<div class="empty"><b>Geen inbox gevonden</b>Er staat geen inbox op <code>${esc(ib.pad)}</code>.</div>`;
+  const html = ib.tekst.trim() ? md(ib.tekst, { path: ib.pad }) : "";
+  if (!html.trim()) return '<div class="empty"><b>De inbox is leeg</b></div>';
+  return `<p class="sn">Losse notities uit <code>${esc(ib.pad)}</code>, alleen om te lezen.</p><div class="card"><div class="prose" style="max-width:none">${html}</div></div>`;
+}
+function viewAandacht() {
+  const a = aandachtData(), tab = UI.ap || "todos";
+  const tabs = [["todos", "Open TODO's", a.todos.length], ["gaten", "Kennisgaten", a.gaten.length], ["inbox", "Inbox", a.inbox.open + " open"]];
+  const secties = { todos: apTodos(a), gaten: apGaten(a), inbox: apInbox(a) };
+  let body;
+  body = `<div class="seg ap-seg" role="group" aria-label="Onderdeel">${tabs.map(([k, l, n]) => `<button data-act="set" data-key="ap" data-val="${k}" aria-pressed="${String(tab === k)}">${l} <span class="apn">${n}</span></button>`).join("")}</div><div style="margin-top:14px">${secties[tab] || secties.todos}</div>`;
+  return { html: `<h1 class="page">Aandachtspunten</h1><p class="sub">Alles wat nog aandacht vraagt in de kennisbank: open TODO's, onderwerpen die nog geen bestand hebben (kennisgaten) en de inbox.</p>${body}` };
+}
 function viewOver() {
   loadAppLog();
   const st = stats(), shown = S.commits.filter(c => !isSiteCommit(c.msg));
@@ -891,7 +1114,7 @@ function viewSetup() {
 /* ---------- documentpagina's ---------- */
 function parentOf(d) {
   if (SECTIONS[d.section]) return "v-leerpad";
-  if (d.section === "4-projecten") return "v-projecten";
+  if (d.section === "4-projecten") return S.projFrom === "projecten" ? "v-projecten" : "v-tijdlijn";
   if (d.section === "5-doel") return "v-doelen";
   if (d.section === "6-logboek") return "v-logboek";
   if (d.section === "7-toetsen") return "v-toetsen";
@@ -1320,24 +1543,27 @@ function topbar(route, info) {
 }
 function tabbar(tab) {
   const t = (id, href, ic, label) => `<a href="#${href}" data-reset="1" ${tab === id ? 'aria-current="page"' : ""}>${icon(ic)}<span>${label}</span></a>`;
-  return `<div class="tabs"><nav aria-label="Hoofdmenu">${t("start", "", "home", "Start")}${t("leerpad", "v-leerpad", "path", "Leerpad")}${t("projecten", "v-projecten", "folder", "Projecten")}${t("meer", "v-meer", "more", "Meer")}</nav></div>`;
+  return `<div class="tabs"><nav aria-label="Hoofdmenu">${t("start", "", "home", "Start")}${t("leerpad", "v-leerpad", "path", "Leerpad")}${t("tijdlijn", "v-tijdlijn", "timeline", "Tijdlijn")}${t("meer", "v-meer", "more", "Meer")}</nav></div>`;
 }
 /* ---------- desktop: zijbalk, kruimels, inhoudsopgave en toetsenbord ---------- */
-const DEST = [["", "home", "Start", "start"], ["v-leerpad", "path", "Leerpad", "leerpad"], ["v-projecten", "folder", "Projecten", "projecten"], ["v-doelen", "target", "Doelen", "doelen"], ["v-logboek", "book", "Logboek", "logboek"], ["v-toetsen", "quiz", "Toetsen", "toetsen"]];
-const PARENT_LABEL = { "v-start": "Start", "v-leerpad": "Leerpad", "v-projecten": "Projecten", "v-doelen": "Doelen", "v-logboek": "Logboek", "v-toetsen": "Toetsen" };
+const DEST1 = [["", "home", "Start", "start"], ["v-leerpad", "path", "Leerpad", "leerpad"], ["v-tijdlijn", "timeline", "Projecttijdlijn", "tijdlijn"], ["v-aandacht", "alert", "Aandachtspunten", "aandacht"]];
+const DEST2 = [["v-projecten", "folder", "Projecten", "projecten"], ["v-doelen", "target", "Doelen", "doelen"], ["v-logboek", "book", "Logboek", "logboek"], ["v-toetsen", "quiz", "Toetsen", "toetsen"]];
+const DEST3 = [["v-zoek", "search", "Zoeken", "zoek"], ["v-over", "info", "Over de app", "over"], ["v-instellingen", "gear", "Instellingen", "instellingen"]];
+const PARENT_LABEL = { "v-start": "Start", "v-leerpad": "Leerpad", "v-tijdlijn": "Projecttijdlijn", "v-projecten": "Projecten", "v-doelen": "Doelen", "v-logboek": "Logboek", "v-toetsen": "Toetsen" };
 function deskActive(h) {
   if (!h) return "start";
   if (VIEWS[h]) return h.slice(2);
   if (h.startsWith("maak-")) return "toetsen";
   const d = S.bySlug[h]; if (!d) return "";
-  return SECTIONS[d.section] ? "leerpad" : { "4-projecten": "projecten", "5-doel": "doelen", "6-logboek": "logboek", "7-toetsen": "toetsen" }[d.section] || "";
+  return SECTIONS[d.section] ? "leerpad" : { "4-projecten": S.projFrom === "projecten" ? "projecten" : "tijdlijn", "5-doel": "doelen", "6-logboek": "logboek", "7-toetsen": "toetsen" }[d.section] || "";
 }
 function sideHtml(h) {
-  const act = deskActive(h), link = ([href, ic, label, key]) => `<a href="#${href}" data-reset="1" ${act === key ? 'aria-current="page"' : ""}>${icon(ic)}${label}</a>`;
+  const act = deskActive(h), link = ([href, ic, label, key]) => `<a href="#${href}" data-reset="1" ${act === key ? 'aria-current="page"' : ""}>${icon(ic)}${label}${key === "aandacht" && aandachtData().aantal ? `<span class="sidebadge" title="Open TODO's en open inboxitems">${aandachtData().aantal}</span>` : ""}</a>`;
   return `<aside class="side" aria-label="Menu"><a class="brand" href="#" data-reset="1">Kennisbank</a>
     <a class="find" href="#v-zoek" data-reset="1" aria-label="Zoeken">${icon("search")}<span>Zoeken…</span><kbd>/</kbd></a>
-    <nav aria-label="Hoofdmenu">${DEST.map(link).join("")}</nav><hr>
-    <nav aria-label="Meer">${link(["v-over", "info", "Over de app", "over"])}${link(["v-instellingen", "gear", "Instellingen", "instellingen"])}</nav>
+    <nav aria-label="Hoofdmenu">${DEST1.map(link).join("")}</nav><hr>
+    <nav aria-label="Inhoud">${DEST2.map(link).join("")}</nav><hr>
+    <nav aria-label="Meer">${DEST3.map(link).join("")}</nav>
     <div class="sbstat">${statusHtml(true)}</div></aside>`;
 }
 function crumbsHtml(info) {
@@ -1373,17 +1599,18 @@ function route() {
   app.className = "wrap" + (S.setup ? " setup" : "");
   if (S.setup) { app.innerHTML = viewSetup().html; return; }
   if (!h.startsWith("maak-")) S.checked = {};
+  if (h === "v-projecten") S.projFrom = "projecten"; else if (h === "v-tijdlijn") S.projFrom = "tijdlijn";
   if (!h) { view = viewStart(); }
   else if (VIEWS[h]) {
     info = VIEWS[h]; tab = info.tab;
-    view = { start: viewStart, leerpad: viewLeerpad, projecten: viewProjecten, meer: viewMeer }[h.slice(2)] || ({ zoek: viewZoek, doelen: viewDoelen, logboek: viewLogboek, toetsen: viewToetsen, over: viewOver, instellingen: viewInstellingen }[h.slice(2)]);
+    view = { start: viewStart, leerpad: viewLeerpad, projecten: viewProjecten, meer: viewMeer }[h.slice(2)] || ({ tijdlijn: viewTijdlijn, aandacht: viewAandacht, zoek: viewZoek, doelen: viewDoelen, logboek: viewLogboek, toetsen: viewToetsen, over: viewOver, instellingen: viewInstellingen }[h.slice(2)]);
     view = view();
   } else if (h.startsWith("maak-")) {
     { const f0 = decodeURIComponent(h.slice(5)); if (!S.checked[f0] && S.docs.length) { S.checked[f0] = true; tCheckRemote(f0).then(c => { if (c && location.hash === "#" + h) route(); }); } }
     view = viewMaak(decodeURIComponent(h.slice(5))); info = { parent: view.parent, title: view.title, crumb: "Toets maken" }; tab = "meer";
   } else if (S.bySlug[h]) {
     const d = S.bySlug[h]; view = viewDoc(d); info = { parent: view.parent, title: view.title, crumb: d.title };
-    tab = SECTIONS[d.section] ? "leerpad" : d.section === "4-projecten" ? "projecten" : "meer";
+    tab = SECTIONS[d.section] ? "leerpad" : d.section === "4-projecten" ? (S.projFrom === "projecten" ? "meer" : "tijdlijn") : "meer";
   } else { view = { html: '<div class="empty"><b>Pagina niet gevonden</b><a href="#">Naar de start</a></div>' }; info = { parent: "v-start", title: "" }; }
   const name = !h ? "start" : VIEWS[h] ? h.slice(2) : h.startsWith("maak-") ? "maak" : S.bySlug[h] ? "doc" : "onbekend";
   const toc = view.toc ? `<aside class="toc" aria-label="Op deze pagina"><b>Op deze pagina</b>${view.toc.map(t => `<button class="tl l${t.l}" data-act="toc" data-id="${t.id}">${t.t}</button>`).join("")}</aside>` : "";
@@ -1416,6 +1643,7 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("input", e => {
   if (e.target.id === "q") { query = e.target.value; $("#results").innerHTML = searchResults(query); }
+  else if (e.target.id === "gq") { UI.gq = e.target.value; store.set("lezer.leerpad", UI); const gl = $("#gl"); if (gl) gl.innerHTML = apGatenLijst(aandachtData()); }
 });
 function applyTheme() {
   const t = store.get("lezer.theme", "auto"), r = document.documentElement;
@@ -1467,7 +1695,7 @@ async function loadLive(force, silent) {
     if (!silent) pill("Laden…");
     const tree = await gh(cfg, `/repos/${cfg.repo}/git/trees/${encodeURIComponent(cfg.branch)}?recursive=1`);
     S.concepts = {}; for (const t of tree.tree) { const m = t.path.match(/^7-toetsen\/([^/]+)\/concept\.md$/); if (m) S.concepts[m[1]] = true; }
-    const entries = tree.tree.filter(t => t.type === "blob" && includeFile(t.path));
+    const entries = tree.tree.filter(t => t.type === "blob" && (includeFile(t.path) || INBOX_PATHS.includes(t.path)));
     const cache = (await idbGet(key)) || { shas: {}, files: {} };
     const files = {}, shas = {}; let done = 0, i = 0;
     const work = async () => {
