@@ -379,7 +379,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-05T21:45Z";
+const BUILD = "2026-11-06T07:29Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -695,9 +695,9 @@ const firstPara = d => {
   return (parts[0] || "").replace(/\s+/g, " ").replace(/[*_`]/g, "");
 };
 const kindLabel = d => d.type || d.section.replace(/^\d+-/, "");
-function topicRow(d) {
+function topicRow(d, lijst) {
   const sub = d.fm.domein || d.fm.soort || "";
-  return `<a class="row" href="#${d.slug}"><span class="check ${isDone(d) ? "on" : ""} ${isBasis(d) ? "basis" : ""}">${icon("check")}</span>
+  return `<a class="row" href="#${d.slug}${lijst ? "?lijst=" + lijst : ""}"><span class="check ${isDone(d) ? "on" : ""} ${isBasis(d) ? "basis" : ""}">${icon("check")}</span>
     <span class="main"><span class="t">${esc(d.title)}</span><br><span class="m">${esc(d.type)}${sub ? " · " + esc(sub) : ""}${d.fm.status ? " · " + esc(d.fm.status) : ""}</span></span>
     ${isBasis(d) ? '<span class="flag">basis</span>' : ""}</a>`;
 }
@@ -844,7 +844,7 @@ function viewStart() {
       <svg viewBox="0 0 64 64" role="img" aria-label="${st.done} van ${st.total} onderwerpen behandeld"><circle class="bg" cx="32" cy="32" r="26"/><circle class="fg" cx="32" cy="32" r="26" stroke-dasharray="${(163.36 * st.done / Math.max(1, st.total)).toFixed(1)} 163.36"/></svg>
       <div><div class="big">${st.done}<small> van ${st.total}</small></div><div class="sub" style="margin:6px 0 10px">onderwerpen behandeld</div><span class="chip done">basis ${st.basisDone} van ${st.basis}</span></div></div></section>
     <div class="st-a"><h2 class="sec">Verder met</h2>
-    <div class="card pad0 list">${[tdata.map(toetsRow).join(""), doelen.map(doelRow).join(""), nextList.map(d => topicRow(d)).join("")].join("") || '<div class="empty"><b>Alles behandeld</b>Er staat niets meer open.</div>'}</div></div>
+    <div class="card pad0 list">${[tdata.map(toetsRow).join(""), doelen.map(doelRow).join(""), nextList.map(d => topicRow(d, d === nextBasis ? "basis" : "alles")).join("")].join("") || '<div class="empty"><b>Alles behandeld</b>Er staat niets meer open.</div>'}</div></div>
     <div class="st-b"><h2 class="sec">Recent aangepast</h2>
     <div class="card pad0 list">${recent.map(d => `<a class="row" href="#${d.slug}"><span class="main"><span class="t">${esc(d.title)}</span><br><span class="m">${esc(kindLabel(d))} · ${esc(fmtDate(d.fm.bijgewerkt))}</span></span></a>`).join("")}</div></div>
     <div class="st-c"><h2 class="sec">Verder kijken</h2>
@@ -866,7 +866,7 @@ function viewLeerpad() {
       <div class="seg" role="group" aria-label="Soort">${seg("soort", "alle", "Alle")}${seg("soort", "kennis", "Kennis")}${seg("soort", "technologie", "Techniek")}${seg("soort", "werkwijze", "Werkwijze")}</div>
       <div class="toggle"><span>Alleen wat nog open staat</span><button data-act="toggleopen" aria-pressed="${String(UI.open)}">${UI.open ? "aan" : "uit"}</button></div>
     </div>
-    <div class="card pad0 list">${list.length ? list.map(topicRow).join("") : '<div class="empty"><b>Niets gevonden</b>Pas de filters aan.</div>'}</div>` };
+    <div class="card pad0 list">${list.length ? list.map(d => topicRow(d, UI.level === "basis" ? "basis" : "alles")).join("") : '<div class="empty"><b>Niets gevonden</b>Pas de filters aan.</div>'}</div>` };
 }
 function projectTree() {
   const nodes = {};
@@ -1131,15 +1131,17 @@ function headIds(html) {
   const out = html.replace(/<h([23])>([\s\S]*?)<\/h\1>/g, (m, l, inner) => { const id = "h-" + (++n); toc.push({ id, l: +l, t: inner.replace(/<[^>]+>/g, "") }); return `<h${l} id="${id}">${inner}</h${l}>`; });
   return { html: out, toc };
 }
-function viewDoc(d) {
+function viewDoc(d, scope) {
   const f = d.fm, isTopic = S.topics.includes(d);
   let head = "", tail = "";
   const where = d.path.split("/").slice(0, -1).join(" / ");
   if (isTopic) {
     head = `<div class="chips" style="margin:12px 0 4px">${chip(d.type)}${f.domein ? chip(f.domein) : ""}${f.soort ? chip(f.soort) : ""}${isBasis(d) ? chip("basis", "open") : ""}${isDone(d) ? chip("behandeld", "done") : chip("nog niet behandeld")}${statusChip(d)}</div>
       <p class="sn">bijgewerkt ${esc(fmtDate(f.bijgewerkt))}</p>${f.tags && f.tags.length ? `<div class="chips" style="margin-top:8px">${f.tags.map(t => `<span class="chip mono">${esc(t)}</span>`).join("")}</div>` : ""}`;
-    const i = S.topics.indexOf(d), p = S.topics[i - 1], n = S.topics[i + 1];
-    tail = `<nav class="pn" aria-label="Volgende onderwerpen">${p ? `<a href="#${p.slug}"><span>vorige</span><b>${esc(p.title)}</b></a>` : "<span></span>"}${n ? `<a class="next" href="#${n.slug}"><span>volgende</span><b>${esc(n.title)}</b></a>` : ""}</nav>`;
+    // Vorige en volgende blijven binnen de lijst waaruit je kwam: Basis (alleen basis: true) of Alles.
+    const inBasis = scope === "basis" && isBasis(d), reeks = inBasis ? S.topics.filter(isBasis) : S.topics, lijst = inBasis ? "basis" : "alles";
+    const i = reeks.indexOf(d), p = reeks[i - 1], n = reeks[i + 1], lbl = inBasis ? " · basis" : "";
+    tail = `<nav class="pn" aria-label="${inBasis ? "Vorige en volgende in de basis" : "Vorige en volgende onderwerpen"}">${p ? `<a href="#${p.slug}?lijst=${lijst}"><span>vorige${lbl}</span><b>${esc(p.title)}</b></a>` : "<span></span>"}${n ? `<a class="next" href="#${n.slug}?lijst=${lijst}"><span>volgende${lbl}</span><b>${esc(n.title)}</b></a>` : ""}</nav>`;
   } else if (/\/project\.md$/.test(d.path)) {
     const tech = (f.technieken || []).map(t => { const m = S.byTitle[String(t).toLowerCase()]; return m ? `<a class="chip" href="#${m.slug}">${esc(t)}</a>` : `<span class="chip">${esc(t)}</span>`; }).join("");
     const repo = /^https?:\/\//.test(f.repo || "") ? `<a href="${esc(f.repo)}" target="_blank" rel="noopener noreferrer">${esc(f.repo.replace(/^https?:\/\/(www\.)?/, ""))}</a>` : "";
@@ -1594,7 +1596,7 @@ document.addEventListener("keydown", e => {
 });
 
 function route() {
-  const app = $("#app"), h = location.hash.slice(1);
+  const app = $("#app"), full = location.hash.slice(1), h = full.split("?")[0], scope = new URLSearchParams(full.split("?")[1] || "").get("lijst") === "basis" ? "basis" : "alles";
   let view, info = {}, tab = "start";
   app.className = "wrap" + (S.setup ? " setup" : "");
   if (S.setup) { app.innerHTML = viewSetup().html; return; }
@@ -1609,7 +1611,7 @@ function route() {
     { const f0 = decodeURIComponent(h.slice(5)); if (!S.checked[f0] && S.docs.length) { S.checked[f0] = true; tCheckRemote(f0).then(c => { if (c && location.hash === "#" + h) route(); }); } }
     view = viewMaak(decodeURIComponent(h.slice(5))); info = { parent: view.parent, title: view.title, crumb: "Toets maken" }; tab = "meer";
   } else if (S.bySlug[h]) {
-    const d = S.bySlug[h]; view = viewDoc(d); info = { parent: view.parent, title: view.title, crumb: d.title };
+    const d = S.bySlug[h]; view = viewDoc(d, scope); info = { parent: view.parent, title: view.title, crumb: d.title };
     tab = SECTIONS[d.section] ? "leerpad" : d.section === "4-projecten" ? (S.projFrom === "projecten" ? "meer" : "tijdlijn") : "meer";
   } else { view = { html: '<div class="empty"><b>Pagina niet gevonden</b><a href="#">Naar de start</a></div>' }; info = { parent: "v-start", title: "" }; }
   const name = !h ? "start" : VIEWS[h] ? h.slice(2) : h.startsWith("maak-") ? "maak" : S.bySlug[h] ? "doc" : "onbekend";
