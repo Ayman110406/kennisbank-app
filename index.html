@@ -385,6 +385,22 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 .qo.c:not(.j) { background: var(--bad-bg); border-color: var(--bad); } .qo.c:not(.j) .tg { color: var(--bad); }
 .rvres { font-size: 14.5px; padding: 8px 10px; border-left: 3px solid var(--line); background: var(--chip); border-radius: 0 8px 8px 0; }
 .rvres.done { border-left-color: var(--done); } .rvres.bad { border-left-color: var(--bad); } .rvres.open { border-left-color: var(--open); }
+
+/* direct controleren tijdens een toets */
+.qchk { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; } .qchk .btn { flex: 1; width: auto; }
+.qopt.ok { border-color: var(--done); background: var(--done-bg); } .qopt.bad { border-color: var(--bad); background: var(--bad-bg); }
+.qopt:disabled { cursor: default; opacity: 1; color: inherit; }
+.qopt .tg { margin-left: auto; font: 600 10.5px var(--f-mono); text-transform: uppercase; letter-spacing: .04em; flex: none; padding-top: 4px; text-align: right; max-width: 34%; }
+.qopt.ok .tg { color: var(--done); } .qopt.bad .tg { color: var(--bad); }
+#tin[readonly] { opacity: .85; }
+.fb { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.fb.done { border-color: var(--done); background: var(--done-bg); } .fb.bad { border-color: var(--bad); background: var(--bad-bg); } .fb.open { border-color: var(--open); background: var(--open-bg); }
+.fbh { display: flex; align-items: center; gap: 8px; } .fbh .pts { margin-left: auto; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+.fbz { margin: 8px 0 0; font-size: 15px; }
+.fb .lbl { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 4px; }
+.fb .ans { padding: 8px 10px; border-radius: 8px; background: var(--chip); font-size: 14.5px; overflow-wrap: anywhere; } .fb .ans.g { background: var(--done-bg); }
+.fb .ex { font-size: 14px; overflow-wrap: anywhere; } .fb code { font-family: var(--f-mono); font-size: .85em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.qd.ok { background: var(--done-bg); border-color: var(--done); color: var(--done); } .qd.bad { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); } .qd.part { background: var(--open-bg); border-color: var(--open); color: var(--open); }
 </style>
 
 <div class="wrap" id="app"></div>
@@ -392,7 +408,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-11T07:10Z";
+const BUILD = "2026-11-11T07:45Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -1154,6 +1170,27 @@ function pgFields(rest) {
   return f;
 }
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const optLab = (q, k) => { if (!q) return String(k); const o = q.opties.find(o => o.k === k); return o ? (q.type === "waar-onwaar" ? o.t : k + ". " + o.t) : String(k); };
+/* wat koos je (gek) en wat is juist (jset), uit de vastgelegde tekst van een antwoord */
+function gekJuist(r) {
+  const geen = !r.gegeven || r.gegeven === NIET;
+  const gek = geen ? [] : r.type === "meerdere-juist" ? r.gegeven.split(",").map(s => s.trim()).filter(Boolean) : [r.type === "waar-onwaar" ? r.gegeven.toLowerCase() : r.gegeven.length === 1 ? r.gegeven.toUpperCase() : r.gegeven];
+  const jset = r.type === "meerdere-juist" ? r.juist.split(",").map(s => s.trim()).filter(Boolean) : r.type === "invul" ? r.juist.split(" | ").map(s => s.trim()).filter(Boolean) : [r.type === "waar-onwaar" ? r.juist.toLowerCase() : r.juist];
+  return { geen, gek, jset };
+}
+/* het resultaat in gewone zinnen */
+function uitkomstZin(r, q, geen, gek, jset) {
+  const n = `${nl(r.pts)} van ${nl(r.max)} punten`;
+  if (r.type === "open") return r.res === "nog na te kijken" ? `Nog na te kijken door Claude (maximaal ${nl(r.max)} punten).` : `${cap(r.res)}: ${n}.`;
+  if (geen) return `Niet beantwoord: ${n}.`;
+  if (r.type === "meerkeuze" || r.type === "waar-onwaar") return r.res === "goed" ? `Goed: je koos ${optLab(q, gek[0])}, en dat is het juiste antwoord. ${n}.` : `Fout: je koos ${optLab(q, gek[0])}, maar het juiste antwoord is ${optLab(q, jset[0])}. ${n}.`;
+  if (r.type === "meerdere-juist") {
+    const g = gek.filter(k => jset.includes(k)), gemist = jset.filter(k => !gek.includes(k)), fout = gek.filter(k => !jset.includes(k)), delen = [];
+    if (g.length) delen.push("Goed gekozen: " + g.join(", ")); if (gemist.length) delen.push("Gemist: " + gemist.join(", ")); if (fout.length) delen.push("Onterecht gekozen: " + fout.join(", "));
+    return `${r.res === "goed" ? "Goed: alle juiste antwoorden gekozen en geen foute." : r.res === "deels" ? "Deels goed." : "Fout."} ${delen.join(". ")}${delen.length ? ". " : ""}Berekening: (${g.length} goed − ${fout.length} fout) ÷ ${jset.length} × ${nl(r.max)} = ${nl(r.pts)} ${r.pts === 1 ? "punt" : "punten"} (nooit onder nul).`;
+  }
+  return r.res === "goed" ? `Goed: “${r.gegeven}” is een geaccepteerd antwoord. ${n}.` : `Fout: je vulde “${r.gegeven}” in. Geaccepteerd: ${jset.join(" of ")}. ${n}.`;
+}
 function pogingReview(d) {
   const f = d.fm, folder = String(f.toets || d.path.split("/")[1]), td = S.byPath["7-toetsen/" + folder + "/toets.md"];
   const ai = d.body.search(/^## Antwoorden\s*$/m); if (ai < 0) return null;
@@ -1169,20 +1206,8 @@ function pogingReview(d) {
   const filt = UI.pf || "alle", count = k => rows.filter(r => r.res === k).length, niet = rows.filter(r => !r.gegeven || r.gegeven === NIET).length;
   const auto = rows.filter(r => r.type !== "open"), open = rows.filter(r => r.type === "open"), sum = a => a.reduce((s, r) => s + r.pts, 0), summax = a => a.reduce((s, r) => s + r.max, 0);
   const scoreRegel = f.score !== "" && f.score != null ? `Score <b>${esc(f.score)}</b> van ${esc(f.maximaal || nl(summax(rows)))}${f.percentage !== "" && f.percentage != null ? " (" + esc(f.percentage) + "%)" : ""}` : `Automatisch <b>${nl(sum(auto))}</b> van ${nl(summax(auto))}${open.length ? `. ${open.length} open ${open.length === 1 ? "vraag" : "vragen"} (${nl(summax(open))} punten) moet${open.length === 1 ? "" : "en"} nog door Claude worden nagekeken` : ""}`;
-  const lab = (q, k) => { if (!q) return String(k); const o = q.opties.find(o => o.k === k); return o ? (q.type === "waar-onwaar" ? o.t : k + ". " + o.t) : String(k); };
   const rij = r => {
-    const q = r.q, geen = !r.gegeven || r.gegeven === NIET;
-    const gek = r.type === "meerdere-juist" ? r.gegeven.split(",").map(s => s.trim()).filter(Boolean) : geen ? [] : [r.type === "waar-onwaar" ? r.gegeven.toLowerCase() : r.gegeven.toUpperCase().length === 1 ? r.gegeven.toUpperCase() : r.gegeven];
-    const jset = r.type === "meerdere-juist" ? r.juist.split(",").map(s => s.trim()).filter(Boolean) : r.type === "invul" ? r.juist.split(" | ").map(s => s.trim()).filter(Boolean) : [r.type === "waar-onwaar" ? r.juist.toLowerCase() : r.juist];
-    const n = `${nl(r.pts)} van ${nl(r.max)} punten`; let uit;
-    if (r.type === "open") uit = r.res === "nog na te kijken" ? `Nog na te kijken door Claude (maximaal ${nl(r.max)} punten).` : `${cap(r.res)}: ${n}.`;
-    else if (geen) uit = `Niet beantwoord: ${n}.`;
-    else if (r.type === "meerkeuze" || r.type === "waar-onwaar") uit = r.res === "goed" ? `Goed: je koos ${lab(q, gek[0])}, en dat is het juiste antwoord. ${n}.` : `Fout: je koos ${lab(q, gek[0])}, maar het juiste antwoord is ${lab(q, jset[0])}. ${n}.`;
-    else if (r.type === "meerdere-juist") {
-      const g = gek.filter(k => jset.includes(k)), gemist = jset.filter(k => !gek.includes(k)), fout = gek.filter(k => !jset.includes(k)), delen = [];
-      if (g.length) delen.push("Goed gekozen: " + g.join(", ")); if (gemist.length) delen.push("Gemist: " + gemist.join(", ")); if (fout.length) delen.push("Onterecht gekozen: " + fout.join(", "));
-      uit = `${r.res === "goed" ? "Goed: alle juiste antwoorden gekozen en geen foute." : r.res === "deels" ? "Deels goed." : "Fout."} ${delen.join(". ")}${delen.length ? ". " : ""}Berekening: (${g.length} goed − ${fout.length} fout) ÷ ${jset.length} × ${nl(r.max)} = ${n.replace(" van " + nl(r.max) + " punten", "")} ${r.pts === 1 ? "punt" : "punten"} (nooit onder nul).`;
-    } else uit = r.res === "goed" ? `Goed: “${r.gegeven}” is een geaccepteerd antwoord. ${n}.` : `Fout: je vulde “${r.gegeven}” in. Geaccepteerd: ${jset.join(" of ")}. ${n}.`;
+    const q = r.q, { geen, gek, jset } = gekJuist(r), uit = uitkomstZin(r, q, geen, gek, jset);
     const heeftOpties = q && (r.type === "meerkeuze" || r.type === "meerdere-juist" || r.type === "waar-onwaar");
     const opties = heeftOpties ? `<p class="lbl">Antwoordopties</p>${q.opties.map(o => { const c = gek.includes(o.k), j = jset.includes(o.k); return `<div class="qo ${j ? "j" : ""} ${c ? "c" : ""}"><span class="k">${r.type === "waar-onwaar" ? "" : esc(o.k)}</span><span>${inline(o.t, td)}</span><span class="tg">${c && j ? "jouw keuze · juist" : c ? "jouw keuze · fout" : j ? "juist, niet gekozen" : ""}</span></div>`; }).join("")}` : "";
     const antw = !heeftOpties ? `<p class="lbl">Jouw antwoord</p><div class="ans ${r.res === "goed" ? "g" : r.res === "fout" ? "f" : ""}">${esc(geen ? NIET : r.gegeven)}</div>${r.type === "open" ? "" : `<p class="lbl">Juist</p><div class="ans g">${esc(r.juist)}</div>`}` : "";
@@ -1336,7 +1361,9 @@ const TS = {};
 const tGet = f => TS[f] || (TS[f] = store.get(TOETS_KEY(f), null));
 const tPut = (f, st) => { TS[f] = st; if (st) store.set(TOETS_KEY(f), st); else store.del(TOETS_KEY(f)); };
 const tFind = f => toetsData().find(x => x.folder === f);
-const tCount = (st, qs) => qs.filter(q => answered(q, st.answers[q.id])).length;
+const isChk = (st, q) => !!(st.chk && st.chk[q.id]);
+const klaarQ = (st, q) => answered(q, st.answers[q.id]) || isChk(st, q);
+const tCount = (st, qs) => qs.filter(q => klaarQ(st, q)).length;
 function tCta(t) {
   const st = tGet(t.folder);
   if (!st) return S.concepts[t.folder] ? "Verder met toets (concept in GitHub)" : "Toets maken";
@@ -1355,7 +1382,7 @@ function viewMaak(folder) {
     <div class="stack"><button class="btn tbig" data-act="tadopt" data-folder="${esc(folder)}">Verder met het concept</button><button class="btn ghost" data-act="tbegin" data-folder="${esc(folder)}" data-now="1">Opnieuw beginnen</button></div>`, ...back };
   if (!st) return { html: `<h1 class="page">${esc(title)}</h1>
     <div class="card" style="margin:14px 0"><dl class="kv"><dt>Vragen</dt><dd>${qs.length}</dd><dt>Punten</dt><dd>${nl(P.totaal)}</dd><dt>Versie</dt><dd>${esc(t.toets.fm.versie)}</dd></dl></div>
-    <p class="sn">Je antwoorden worden op dit apparaat bewaard. Je kunt de app sluiten en later verder gaan. Antwoord en uitleg zie je pas na het inleveren.</p>
+    <p class="sn">Kies een antwoord en tik op Controleer: je ziet meteen of het goed is, met het juiste antwoord en uitleg. Daarna ga je pas naar de volgende vraag en kun je dat antwoord niet meer wijzigen. Open vragen kijkt Claude later na. Je antwoorden worden bewaard, je kunt de app sluiten en later verder gaan.</p>
     ${P.warn.length ? `<p class="sn" style="color:var(--open)">Let op: ${esc(P.warn.length)} onduidelijkheden in de toets (${esc(P.warn.slice(0, 2).join("; "))}).</p>` : ""}
     <button class="btn tbig" data-act="tbegin" data-folder="${esc(folder)}">Beginnen</button>`, ...back };
   if (st.conflict) return { html: tConflict(t, st), ...back };
@@ -1366,29 +1393,41 @@ function viewMaak(folder) {
   if (st.view === "overzicht") {
     const open = total - done;
     return { html: `<h1 class="page">Overzicht</h1>${bar}<div class="qmeta"><span>${done} van ${total} beantwoord</span><span>${open ? open + " open" : "alles beantwoord"}</span></div><div class="qsync" id="tsync">${tSyncHtml(folder)}</div>
-      <div class="qdots" style="margin:16px 0">${qs.map((q, i) => `<button class="qd ${answered(q, st.answers[q.id]) ? "on" : ""}" data-act="tgoto" data-folder="${esc(folder)}" data-idx="${i}" aria-label="Vraag ${i + 1}${answered(q, st.answers[q.id]) ? ", beantwoord" : ", open"}">${i + 1}</button>`).join("")}</div>
+      <div class="qdots" style="margin:16px 0">${qs.map((q, i) => { const c = isChk(st, q) ? (r => r.res === "goed" ? "ok" : r.res === "fout" ? "bad" : "part")(gradeQ(q, st.answers[q.id])) : answered(q, st.answers[q.id]) ? "on" : "", w = { ok: "goed", bad: "fout", part: "deels goed", on: "beantwoord, nog niet gecontroleerd", "": "open" }[c]; return `<button class="qd ${c}" data-act="tgoto" data-folder="${esc(folder)}" data-idx="${i}" aria-label="Vraag ${i + 1}, ${w}">${i + 1}</button>`; }).join("")}</div>
+      <p class="sn">${(g => `${g.filter(r => r.res === "goed").length} goed · ${g.filter(r => r.res === "deels").length} deels · ${g.filter(r => r.res === "fout").length} fout (gecontroleerd)`)(qs.filter(q => q.type !== "open" && isChk(st, q)).map(q => gradeQ(q, st.answers[q.id])))}</p>
       ${st.ask === "submit" ? `<p class="sn" style="color:var(--open)">Er ${open === 1 ? "is nog 1 vraag" : "zijn nog " + open + " vragen"} niet beantwoord. Die tellen als fout.</p>` : ""}
       <div class="stack"><button class="btn tbig" data-act="tsubmit" data-folder="${esc(folder)}">${st.ask === "submit" ? "Toch inleveren" : "Inleveren"}</button>
       <button class="btn ghost" data-act="tgoto" data-folder="${esc(folder)}" data-idx="${Math.min(st.idx, total - 1)}">Terug naar de vragen</button>
       <button class="btn ghost" data-act="treset" data-folder="${esc(folder)}">${st.ask === "reset" ? "Zeker weten? Tik nogmaals" : "Opnieuw beginnen"}</button></div>`, ...back };
   }
-  const i = Math.max(0, Math.min(st.idx || 0, total - 1)), q = qs[i], a = st.answers[q.id];
+  const i = Math.max(0, Math.min(st.idx || 0, total - 1)), q = qs[i], a = st.answers[q.id], chk = isChk(st, q), metCheck = q.type !== "open", fe = esc(folder);
   const stem = q.stem.split("\n").map(l => inline(l, t.toets)).join("<br>");
+  const gk = chk && metCheck ? (r => ({ r, ...gekJuist(r) }))(gradeQ(q, a)) : null;
   let input = "";
-  if (q.type === "invul") input = `<input type="text" id="tin" value="${esc(a || "")}" placeholder="Jouw antwoord" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwoord">`;
+  if (q.type === "invul") input = `<input type="text" id="tin" value="${esc(a || "")}" placeholder="Jouw antwoord" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwoord" ${chk ? "readonly" : ""}>`;
   else if (q.type === "open") input = `<textarea id="tin" rows="9" placeholder="Schrijf je antwoord" aria-label="Antwoord">${esc(a || "")}</textarea>`;
   else {
     const multi = q.type === "meerdere-juist";
     input = `<div class="qopts" role="${multi ? "group" : "radiogroup"}">${q.opties.map(o => {
-      const on = multi ? (a || []).includes(o.k) : a === o.k;
-      return `<button class="qopt ${multi ? "multi" : ""}" data-act="tpick" data-folder="${esc(folder)}" data-val="${esc(o.k)}" aria-pressed="${on}"><span class="k">${q.type === "waar-onwaar" ? "" : esc(o.k)}</span><span>${inline(o.t, t.toets)}</span></button>`;
+      const on = multi ? (a || []).includes(o.k) : a === o.k, j = gk && gk.jset.includes(o.k), c = gk && gk.gek.includes(o.k);
+      const cls = gk ? (j ? "ok" : c ? "bad" : "") : "", tag = gk ? (c && j ? "jouw keuze · juist" : c ? "jouw keuze · fout" : j ? "juist, niet gekozen" : "") : "";
+      return `<button class="qopt ${multi ? "multi" : ""} ${cls}" data-act="tpick" data-folder="${fe}" data-val="${esc(o.k)}" aria-pressed="${on}" ${chk ? "disabled" : ""}><span class="k">${q.type === "waar-onwaar" ? "" : esc(o.k)}</span><span>${inline(o.t, t.toets)}</span>${tag ? `<span class="tg">${tag}</span>` : ""}</button>`;
     }).join("")}</div>`;
   }
-  const hint = { "meerdere-juist": "Kies alle juiste antwoorden", "meerkeuze": "Kies één antwoord", "waar-onwaar": "Waar of onwaar", "invul": "Vul het ontbrekende in", "open": "Open vraag" }[q.type];
-  return { html: `${bar}<div class="qmeta"><span>Vraag ${i + 1} van ${total} · ${done} beantwoord</span><button class="qlink" data-act="toverzicht" data-folder="${esc(folder)}">Overzicht</button></div><div class="qsync" id="tsync">${tSyncHtml(folder)}</div>
+  const hint = { "meerdere-juist": "Kies alle juiste antwoorden", "meerkeuze": "Kies één antwoord", "waar-onwaar": "Waar of onwaar", "invul": "Vul het ontbrekende in", "open": "Open vraag: Claude kijkt hem later na" }[q.type];
+  const controleer = metCheck && !chk ? `<div class="qchk"><button class="btn tbig" data-act="tcheck" data-folder="${fe}" ${answered(q, a) ? "" : "disabled"}>Controleer</button><button class="qlink" data-act="tskip" data-folder="${fe}">Weet ik niet</button></div>` : "";
+  const fb = gk ? tFeedback(t, q, gk) : "";
+  const slot = metCheck && !chk;
+  return { html: `${bar}<div class="qmeta"><span>Vraag ${i + 1} van ${total} · ${done} beantwoord</span><button class="qlink" data-act="toverzicht" data-folder="${fe}">Overzicht</button></div><div class="qsync" id="tsync">${tSyncHtml(folder)}</div>
     <div class="chips" style="margin:14px 0 0"><span class="chip">${esc(hint)}</span><span class="chip">${nl(q.max)} ${q.max === 1 ? "punt" : "punten"}</span></div>
-    <div class="qstem">${stem}</div>${input}
-    <div class="qnav"><button class="btn ghost" data-act="tprev" data-folder="${esc(folder)}" ${i === 0 ? "disabled" : ""}>Vorige</button><button class="btn" data-act="tnext" data-folder="${esc(folder)}">${i === total - 1 ? "Overzicht" : "Volgende"}</button></div>`, ...back };
+    <div class="qstem">${stem}</div>${input}${controleer}${fb}
+    <div class="qnav"><button class="btn ghost" data-act="tprev" data-folder="${fe}" ${i === 0 ? "disabled" : ""}>Vorige</button><button class="btn" data-act="tnext" data-folder="${fe}" ${slot ? "disabled title=\"Controleer eerst je antwoord\"" : ""}>${i === total - 1 ? "Overzicht" : "Volgende"}</button></div>`, ...back };
+}
+/* feedback direct na het controleren */
+function tFeedback(t, q, g) {
+  const r = g.r, cls = r.res === "goed" ? "done" : r.res === "fout" ? "bad" : "open", zin = uitkomstZin(r, q, g.geen, g.gek, g.jset);
+  return `<div class="fb ${cls}" id="tfb" role="status"><div class="fbh"><span class="chip ${cls}">${r.res === "goed" ? "goed" : r.res === "deels" ? "deels goed" : g.geen ? "niet beantwoord" : "fout"}</span><span class="pts">${nl(r.pts)} van ${nl(r.max)} punten</span></div><p class="fbz">${esc(zin)}</p>
+    ${q.type === "invul" ? `<p class="lbl">Geaccepteerd</p><div class="ans g">${esc(g.jset.join(" of "))}</div>` : ""}${q.uitleg ? `<p class="lbl">Uitleg</p><div class="ex">${inline(q.uitleg, t.toets)}</div>` : ""}</div>`;
 }
 function tResult(t, st) {
   const u = st.uitslag, rows = u.rows, auto = rows.filter(r => r.type !== "open"), open = rows.filter(r => r.type === "open");
@@ -1424,23 +1463,26 @@ function buildConcept(st, qs, titel, folder, gew) {
   const tt = titel + ", concept", yq = /[:#"']/.test(tt) ? JSON.stringify(tt) : tt;
   let t = `---\ntitel: ${yq}\ntype: concept\nstatus: bezig\naangemaakt: ${ymd(new Date(st.start))}\nbijgewerkt: ${ymd(new Date(gew))}\ntags: []\ntoets: ${folder}\ntoetsversie: ${st.v}\ngestart: ${isoT(st.start)}\ngewijzigd: ${isoT(gew)}\napparaat: app\npositie: ${(st.idx || 0) + 1}\n---\n\n# ${tt}\n\n## Antwoorden\n`;
   for (const q of qs) {
-    const a = st.answers[q.id]; if (!answered(q, a)) continue;
-    t += `\n### ${q.id}\n\n${fld("Gegeven", q.type === "meerdere-juist" ? a.slice().sort().join(",") : String(a).trim())}`;
+    const a = st.answers[q.id], c = st.chk && st.chk[q.id]; if (!answered(q, a) && !c) continue;
+    t += `\n### ${q.id}\n\n${c ? "**Gecontroleerd:** ja\n" : ""}${answered(q, a) ? fld("Gegeven", q.type === "meerdere-juist" ? a.slice().sort().join(",") : String(a).trim()) : ""}`;
   }
   return t;
 }
 function parseConcept(text, qs) {
   const d = parseDoc("concept.md", text), type = {}; qs.forEach(q => type[q.id] = q.type);
-  const answers = {};
-  for (const blk of d.body.split(/^(?=### V\d+\s*$)/m)) {
-    const id = (blk.match(/^### (V\d+)\s*$/m) || [])[1], m = blk.match(/\*\*Gegeven:\*\*([\s\S]*)$/); if (!id || !m || !type[id]) continue;
+  const answers = {}, checked = {};
+  for (let blk of d.body.split(/^(?=### V\d+\s*$)/m)) {
+    const id = (blk.match(/^### (V\d+)\s*$/m) || [])[1]; if (!id || !type[id]) continue;
+    if (/^\*\*Gecontroleerd:\*\*[ \t]*ja[ \t]*$/m.test(blk)) checked[id] = 1;
+    blk = blk.replace(/^\*\*Gecontroleerd:\*\*.*\n?/m, "");
+    const m = blk.match(/\*\*Gegeven:\*\*([\s\S]*)$/); if (!m) continue;
     let v = m[1];
     if (/^[ \t]*\n/.test(v)) v = v.split("\n").filter(l => l.startsWith(">")).map(l => l.replace(/^> ?/, "")).join("\n"); else v = v.trim();
     if (!v.trim()) continue;
     answers[id] = type[id] === "meerdere-juist" ? v.split(",").map(s => s.trim()).filter(Boolean).sort() : v;
   }
   const g = Date.parse(d.fm.gewijzigd), s = Date.parse(d.fm.gestart);
-  return { gew: isFinite(g) ? g : 0, start: isFinite(s) ? s : Date.now(), v: d.fm.toetsversie, idx: Math.max(0, (Number(d.fm.positie) || 1) - 1), apparaat: d.fm.apparaat || "", answers };
+  return { gew: isFinite(g) ? g : 0, start: isFinite(s) ? s : Date.now(), v: d.fm.toetsversie, idx: Math.max(0, (Number(d.fm.positie) || 1) - 1), apparaat: d.fm.apparaat || "", answers, checked };
 }
 async function fetchConcept(cfg, folder, ref) {
   const f = tFind(folder); if (!f) return null;
@@ -1505,7 +1547,7 @@ function tSyncHtml(f) {
   return st.sync >= st.gew ? "opgeslagen in GitHub" : "nog niet opgeslagen in GitHub";
 }
 function tSyncRefresh() { const el = $("#tsync"), m = location.hash.match(/^#maak-(.+)$/); if (el && m) el.innerHTML = tSyncHtml(decodeURIComponent(m[1])); }
-function tApply(f, rem) { tPut(f, { v: rem.v, start: rem.start, answers: rem.answers, idx: rem.idx, view: "vraag", fase: "bezig", gew: rem.gew, sync: rem.gew, base: rem.gew }); }
+function tApply(f, rem) { tPut(f, { v: rem.v, start: rem.start, answers: rem.answers, chk: rem.checked || {}, idx: rem.idx, view: "vraag", fase: "bezig", gew: rem.gew, sync: rem.gew, base: rem.gew }); }
 /* vergelijk lokaal met GitHub bij openen: geeft "adopted", "conflict" of false */
 async function tCheckRemote(f) {
   const st = tGet(f), cfg = store.get("lezer.cfg", {}); if (!cfg.token || SNAPSHOT) return false;
@@ -1573,18 +1615,20 @@ async function submitToets(folder) {
 const curQ = f => { const t = tFind(f), st = tGet(f); if (!t || !st) return null; const qs = parseToets(t.toets).vragen; return { t, st, qs, q: qs[Math.max(0, Math.min(st.idx || 0, qs.length - 1))] }; };
 const TACT = {
   tgo(b) { const f = b.dataset.folder, st = tGet(f); if (st && st.fase === "klaar" && st.saved) tPut(f, null); location.hash = "maak-" + f; },
-  tbegin(b) { const f = b.dataset.folder, t = tFind(f); if (!t) return; if (S.concepts[f]) deleteConcept(f); tPut(f, { v: t.toets.fm.versie, start: Date.now(), answers: {}, idx: 0, view: "vraag", fase: "bezig", gew: 0, sync: 0, base: 0 }); route(); window.scrollTo(0, 0); },
+  tbegin(b) { const f = b.dataset.folder, t = tFind(f); if (!t) return; if (S.concepts[f]) deleteConcept(f); tPut(f, { v: t.toets.fm.versie, start: Date.now(), answers: {}, chk: {}, idx: 0, view: "vraag", fase: "bezig", gew: 0, sync: 0, base: 0 }); route(); window.scrollTo(0, 0); },
   async tadopt(b) { const f = b.dataset.folder, cfg = store.get("lezer.cfg", {}); try { const rem = await fetchConcept(cfg, f); if (!rem) { delete S.concepts[f]; pill("Geen concept meer in GitHub", 3000); } else tApply(f, rem); } catch (e) { pill(e.message, 5000); } route(); window.scrollTo(0, 0); },
   tsyncnow(b) { const f = b.dataset.folder, st = tGet(f); if (st) { st.cerr = ""; tPut(f, st); } queueSync(f, 0); },
   tuseremote(b) { const f = b.dataset.folder, st = tGet(f); if (st && st.conflict && st.conflict.rem) tApply(f, st.conflict.rem); route(); },
   tkeeplocal(b) { const f = b.dataset.folder, st = tGet(f); if (!st || !st.conflict) return; st.base = st.conflict.rem ? st.conflict.rem.gew : 0; st.conflict = null; markChanged(f, st, 0); route(); },
   tdiscard(b) { tPut(b.dataset.folder, null); route(); },
   tpick(b) {
-    const c = curQ(b.dataset.folder); if (!c) return; const v = b.dataset.val;
+    const c = curQ(b.dataset.folder); if (!c || isChk(c.st, c.q)) return; const v = b.dataset.val;
     if (c.q.type === "meerdere-juist") { const cur = c.st.answers[c.q.id] || [], n = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v].sort(); if (n.length) c.st.answers[c.q.id] = n; else delete c.st.answers[c.q.id]; }
     else c.st.answers[c.q.id] = v;
-    markChanged(b.dataset.folder, c.st, 0); const y = window.scrollY; route(); window.scrollTo(0, y);
+    markChanged(b.dataset.folder, c.st, 4000); const y = window.scrollY; route(); window.scrollTo(0, y); // de commit volgt bij Controleer
   },
+  tcheck(b) { const f = b.dataset.folder, c = curQ(f); if (!c || c.q.type === "open" || isChk(c.st, c.q) || !answered(c.q, c.st.answers[c.q.id])) return; c.st.chk = c.st.chk || {}; c.st.chk[c.q.id] = 1; markChanged(f, c.st, 0); route(); const e = $("#tfb"); if (e) e.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); },
+  tskip(b) { const f = b.dataset.folder, c = curQ(f); if (!c || c.q.type === "open" || isChk(c.st, c.q)) return; delete c.st.answers[c.q.id]; c.st.chk = c.st.chk || {}; c.st.chk[c.q.id] = 1; markChanged(f, c.st, 0); route(); const e = $("#tfb"); if (e) e.scrollIntoView({ block: "nearest" }); },
   tprev(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c || c.st.idx <= 0) return; c.st.idx--; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
   tnext(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c) return; if (c.st.idx >= c.qs.length - 1) { c.st.view = "overzicht"; c.st.ask = ""; } else c.st.idx++; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
   toverzicht(b) { tFlush(b.dataset.folder); const c = curQ(b.dataset.folder); if (!c) return; c.st.view = "overzicht"; c.st.ask = ""; tPut(b.dataset.folder, c.st); route(); window.scrollTo(0, 0); },
@@ -1605,9 +1649,12 @@ const TACT = {
 document.addEventListener("input", e => {
   if (e.target.id !== "tin") return;
   const m = location.hash.match(/^#maak-(.+)$/), c = m && curQ(decodeURIComponent(m[1])); if (!c) return;
+  if (isChk(c.st, c.q)) return;
   if (e.target.value.trim()) c.st.answers[c.q.id] = e.target.value; else delete c.st.answers[c.q.id];
+  const cb = $("[data-act=tcheck]"); if (cb) cb.disabled = !answered(c.q, c.st.answers[c.q.id]);
   markChanged(c.t.folder, c.st, 2500);
 });
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target && e.target.id === "tin" && e.target.tagName === "INPUT") { const cb = $("[data-act=tcheck]"); if (cb && !cb.disabled) { e.preventDefault(); cb.click(); } } });
 
 /* ---------- router ---------- */
 let depth = 0;
