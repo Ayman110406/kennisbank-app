@@ -171,10 +171,6 @@ label.f { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6
 .empty b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px; }
 .pill { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 13px; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
 .steps { padding-left: 1.2em; } .steps li { margin: .5em 0; }
-.spark { width: 100%; height: 44px; display: block; }
-.spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.spark .dot { fill: none; stroke: var(--accent); stroke-width: 7px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.spark line { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .bar { height: 6px; background: var(--chip); border-radius: 3px; overflow: hidden; width: 70px; flex: none; }
 .bar b { display: block; height: 100%; background: var(--accent); }
 .pct { font-variant-numeric: tabular-nums; font-weight: 600; width: 52px; text-align: right; flex: none; }
@@ -372,6 +368,23 @@ textarea#tin { resize: vertical; line-height: 1.45; }
   .ap-f { flex-direction: row; align-items: center; } .ap-f input { max-width: 320px; } .ap-f .seg { min-width: 300px; }
   .desk main.pg-aandacht { max-width: 1040px; }
 }
+
+/* scores per poging en nakijken van een poging */
+.sbsum { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.sbars { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.sb { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 62px; }
+.sbv { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.sbt { display: flex; align-items: flex-end; width: 100%; height: 72px; background: var(--chip); border-radius: 8px; overflow: hidden; }
+.sbt b { display: block; width: 100%; background: var(--accent); border-radius: 6px 6px 0 0; }
+.sbt b.na { background: repeating-linear-gradient(45deg, var(--open-bg), var(--open-bg) 4px, transparent 4px, transparent 8px); }
+.sbl { font-size: 11px; color: var(--muted); font-family: var(--f-mono); }
+.qo { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; margin: 4px 0; font-size: 14.5px; }
+.qo .k { flex: none; min-width: 22px; height: 22px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font: 700 12px var(--f-ui); }
+.qo .tg { margin-left: auto; font: 600 10.5px var(--f-mono); text-transform: uppercase; letter-spacing: .04em; flex: none; padding-top: 4px; text-align: right; max-width: 38%; }
+.qo.j { background: var(--done-bg); border-color: var(--done); } .qo.j .tg { color: var(--done); }
+.qo.c:not(.j) { background: var(--bad-bg); border-color: var(--bad); } .qo.c:not(.j) .tg { color: var(--bad); }
+.rvres { font-size: 14.5px; padding: 8px 10px; border-left: 3px solid var(--line); background: var(--chip); border-radius: 0 8px 8px 0; }
+.rvres.done { border-left-color: var(--done); } .rvres.bad { border-left-color: var(--bad); } .rvres.open { border-left-color: var(--open); }
 </style>
 
 <div class="wrap" id="app"></div>
@@ -379,7 +392,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-06T07:29Z";
+const BUILD = "2026-11-11T07:10Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -979,11 +992,13 @@ function toetsData() {
     return t;
   }).sort((a, b) => b.folder.localeCompare(a.folder));
 }
-function spark(vals) {
-  const pts = vals.map((v, i) => v == null ? null : [vals.length === 1 ? 50 : 4 + (92 * i) / (vals.length - 1), 28 - (26 * Math.max(0, Math.min(100, v))) / 100]).filter(Boolean);
-  if (!pts.length) return "";
-  return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" role="img" aria-label="Scores per poging"><line x1="0" y1="2" x2="100" y2="2"/><line x1="0" y1="28" x2="100" y2="28"/>
-    <polyline points="${pts.map(p => p.join(",")).join(" ")}"/>${pts.map(p => `<path class="dot" d="M${p[0]} ${p[1]}h0"/>`).join("")}</svg>`;
+const fmtDuur = m => { m = Math.round(Number(m)); if (!isFinite(m) || m < 0) return ""; if (m < 120) return m + " min"; const u = Math.floor(m / 60), r = m % 60; if (u < 48) return u + " u" + (r ? " " + r + " min" : ""); return Math.floor(u / 24) + " d " + (u % 24) + " u"; };
+/* scores per poging als staafjes met het percentage erboven */
+function scoreBars(t) {
+  const sc = t.scores; if (!sc.length) return '<span class="sn">Nog geen pogingen</span>';
+  const klaar = sc.filter(v => v != null), laatste = klaar[klaar.length - 1], beste = klaar.length ? Math.max(...klaar) : null, start = Math.max(0, sc.length - 8);
+  const samen = klaar.length ? `Laatste ${Math.round(laatste)}%${klaar.length > 1 ? " · beste " + Math.round(beste) + "%" : ""}` : "Nog niet nagekeken";
+  return `<div class="sbsum"><b>Scores per poging</b><span class="sn">${samen}</span></div><div class="sbars" role="img" aria-label="Scores per poging. ${samen}">${sc.slice(start).map((v, k) => `<div class="sb"><span class="sbv">${v == null ? "…" : Math.round(v) + "%"}</span><span class="sbt"><b class="${v == null ? "na" : ""}" style="height:${v == null ? 100 : Math.max(4, Math.min(100, v))}%"></b></span><span class="sbl">poging ${start + k + 1}</span></div>`).join("")}</div>${klaar.length < sc.length ? '<p class="sn" style="margin:6px 0 0">Gestreept = nog niet nagekeken.</p>' : ""}`;
 }
 function themeList(t) {
   if (!t.themes.length) return "";
@@ -997,7 +1012,7 @@ function viewToetsen() {
     const last = t.scores.filter(v => v != null).slice(-1)[0], wacht = t.pogingen.filter(p => p.fm.status === "ingeleverd").length;
     return `<div class="stack" style="gap:8px"><a class="card" href="#${t.toets.slug}" style="text-decoration:none;color:inherit"><div class="t" style="font-weight:600">${esc(t.toets.title)}</div>
       <div class="sn">${t.pogingen.length} ${t.pogingen.length === 1 ? "poging" : "pogingen"}${last != null ? " · laatste " + Math.round(last) + "%" : ""}${wacht ? " · " + wacht + " nakijken" : ""}${t.toets.fm.versie ? " · versie " + esc(t.toets.fm.versie) : ""}</div>
-      ${spark(t.scores)}${themeList(t)}</a>${tBtn(t)}</div>`; }).join("")}</div>` };
+      ${scoreBars(t)}${themeList(t)}</a>${tBtn(t)}</div>`; }).join("")}</div>` };
 }
 function loadAppLog() {
   if (SNAPSHOT || S.appLog !== undefined) return;
@@ -1131,6 +1146,64 @@ function headIds(html) {
   const out = html.replace(/<h([23])>([\s\S]*?)<\/h\1>/g, (m, l, inner) => { const id = "h-" + (++n); toc.push({ id, l: +l, t: inner.replace(/<[^>]+>/g, "") }); return `<h${l} id="${id}">${inner}</h${l}>`; });
   return { html: out, toc };
 }
+/* ---------- een poging nakijken: vraag, keuze, juist antwoord en wat het resultaat concreet is ---------- */
+function pgFields(rest) {
+  const re = /^\*\*([A-Za-z]+):\*\*[ \t]*/gm, hits = [], f = {}; let x;
+  while ((x = re.exec(rest))) hits.push({ k: x[1], s: x.index, e: re.lastIndex });
+  hits.forEach((hh, n) => { let v = rest.slice(hh.e, n + 1 < hits.length ? hits[n + 1].s : rest.length).trim(); if (v.startsWith(">")) v = v.split("\n").map(l => l.replace(/^>\s?/, "")).join("\n").trim(); f[hh.k] = v; });
+  return f;
+}
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+function pogingReview(d) {
+  const f = d.fm, folder = String(f.toets || d.path.split("/")[1]), td = S.byPath["7-toetsen/" + folder + "/toets.md"];
+  const ai = d.body.search(/^## Antwoorden\s*$/m); if (ai < 0) return null;
+  let rest = d.body.slice(ai), feedback = ""; const fi = rest.search(/^## Feedback\s*$/m);
+  if (fi >= 0) { feedback = rest.slice(fi); rest = rest.slice(0, fi); }
+  const blocks = rest.split(/^(?=### V\d+ · )/m).filter(b => /^### V\d+ · /.test(b)); if (!blocks.length) return null;
+  const zelfde = !!td && String(td.fm.versie) === String(f.toetsversie), qs = {};
+  if (zelfde) parseToets(td).vragen.forEach(q => qs[q.id] = q);
+  const num = s => parseFloat(String(s).replace(",", "."));
+  const rows = blocks.map(b => { const m = b.match(/^### (V\d+) · ([a-z-]+) · ([\d.,]+) van ([\d.,]+) punten[^\n]*\n?/); if (!m) return null; const fl = pgFields(b.slice(m[0].length));
+    return { id: m[1], type: m[2], pts: num(m[3]), max: num(m[4]), thema: fl.Thema || "", gegeven: fl.Gegeven || "", juist: fl.Juist || "", res: (fl.Resultaat || "").toLowerCase(), oordeel: fl.Oordeel || "", q: qs[m[1]] || null }; }).filter(Boolean);
+  if (!rows.length) return null;
+  const filt = UI.pf || "alle", count = k => rows.filter(r => r.res === k).length, niet = rows.filter(r => !r.gegeven || r.gegeven === NIET).length;
+  const auto = rows.filter(r => r.type !== "open"), open = rows.filter(r => r.type === "open"), sum = a => a.reduce((s, r) => s + r.pts, 0), summax = a => a.reduce((s, r) => s + r.max, 0);
+  const scoreRegel = f.score !== "" && f.score != null ? `Score <b>${esc(f.score)}</b> van ${esc(f.maximaal || nl(summax(rows)))}${f.percentage !== "" && f.percentage != null ? " (" + esc(f.percentage) + "%)" : ""}` : `Automatisch <b>${nl(sum(auto))}</b> van ${nl(summax(auto))}${open.length ? `. ${open.length} open ${open.length === 1 ? "vraag" : "vragen"} (${nl(summax(open))} punten) moet${open.length === 1 ? "" : "en"} nog door Claude worden nagekeken` : ""}`;
+  const lab = (q, k) => { if (!q) return String(k); const o = q.opties.find(o => o.k === k); return o ? (q.type === "waar-onwaar" ? o.t : k + ". " + o.t) : String(k); };
+  const rij = r => {
+    const q = r.q, geen = !r.gegeven || r.gegeven === NIET;
+    const gek = r.type === "meerdere-juist" ? r.gegeven.split(",").map(s => s.trim()).filter(Boolean) : geen ? [] : [r.type === "waar-onwaar" ? r.gegeven.toLowerCase() : r.gegeven.toUpperCase().length === 1 ? r.gegeven.toUpperCase() : r.gegeven];
+    const jset = r.type === "meerdere-juist" ? r.juist.split(",").map(s => s.trim()).filter(Boolean) : r.type === "invul" ? r.juist.split(" | ").map(s => s.trim()).filter(Boolean) : [r.type === "waar-onwaar" ? r.juist.toLowerCase() : r.juist];
+    const n = `${nl(r.pts)} van ${nl(r.max)} punten`; let uit;
+    if (r.type === "open") uit = r.res === "nog na te kijken" ? `Nog na te kijken door Claude (maximaal ${nl(r.max)} punten).` : `${cap(r.res)}: ${n}.`;
+    else if (geen) uit = `Niet beantwoord: ${n}.`;
+    else if (r.type === "meerkeuze" || r.type === "waar-onwaar") uit = r.res === "goed" ? `Goed: je koos ${lab(q, gek[0])}, en dat is het juiste antwoord. ${n}.` : `Fout: je koos ${lab(q, gek[0])}, maar het juiste antwoord is ${lab(q, jset[0])}. ${n}.`;
+    else if (r.type === "meerdere-juist") {
+      const g = gek.filter(k => jset.includes(k)), gemist = jset.filter(k => !gek.includes(k)), fout = gek.filter(k => !jset.includes(k)), delen = [];
+      if (g.length) delen.push("Goed gekozen: " + g.join(", ")); if (gemist.length) delen.push("Gemist: " + gemist.join(", ")); if (fout.length) delen.push("Onterecht gekozen: " + fout.join(", "));
+      uit = `${r.res === "goed" ? "Goed: alle juiste antwoorden gekozen en geen foute." : r.res === "deels" ? "Deels goed." : "Fout."} ${delen.join(". ")}${delen.length ? ". " : ""}Berekening: (${g.length} goed − ${fout.length} fout) ÷ ${jset.length} × ${nl(r.max)} = ${n.replace(" van " + nl(r.max) + " punten", "")} ${r.pts === 1 ? "punt" : "punten"} (nooit onder nul).`;
+    } else uit = r.res === "goed" ? `Goed: “${r.gegeven}” is een geaccepteerd antwoord. ${n}.` : `Fout: je vulde “${r.gegeven}” in. Geaccepteerd: ${jset.join(" of ")}. ${n}.`;
+    const heeftOpties = q && (r.type === "meerkeuze" || r.type === "meerdere-juist" || r.type === "waar-onwaar");
+    const opties = heeftOpties ? `<p class="lbl">Antwoordopties</p>${q.opties.map(o => { const c = gek.includes(o.k), j = jset.includes(o.k); return `<div class="qo ${j ? "j" : ""} ${c ? "c" : ""}"><span class="k">${r.type === "waar-onwaar" ? "" : esc(o.k)}</span><span>${inline(o.t, td)}</span><span class="tg">${c && j ? "jouw keuze · juist" : c ? "jouw keuze · fout" : j ? "juist, niet gekozen" : ""}</span></div>`; }).join("")}` : "";
+    const antw = !heeftOpties ? `<p class="lbl">Jouw antwoord</p><div class="ans ${r.res === "goed" ? "g" : r.res === "fout" ? "f" : ""}">${esc(geen ? NIET : r.gegeven)}</div>${r.type === "open" ? "" : `<p class="lbl">Juist</p><div class="ans g">${esc(r.juist)}</div>`}` : "";
+    const onder = q && q.onderwerpPad && S.byPath[resolvePath(td.path, q.onderwerpPad)] ? ` · <a href="#${S.byPath[resolvePath(td.path, q.onderwerpPad)].slug}">${esc(q.onderwerp)}</a>` : "";
+    const chipCls = r.res === "goed" ? "done" : r.res === "fout" ? "bad" : "open";
+    return `<article class="card qres rv"><div class="qh"><b>${r.id}</b><span class="chip ${chipCls}">${esc(r.res || "?")}</span><span class="pts">${nl(r.pts)} van ${nl(r.max)}</span></div>
+      <p class="sn" style="margin:2px 0 8px">${esc(r.type)}${r.thema ? " · " + esc(r.thema) : ""}${onder}</p>
+      ${q ? `<p class="lbl">Vraag</p><div class="qs">${q.stem.split("\n").map(l => inline(l, td)).join("<br>")}</div>` : ""}${opties}${antw}
+      <p class="lbl">Resultaat</p><div class="rvres ${chipCls}">${esc(uit)}</div>
+      ${r.oordeel ? `<p class="lbl">Oordeel</p><div class="ex">${inline(r.oordeel, d)}</div>` : ""}
+      ${q && r.type === "open" ? `<p class="lbl">Voorbeeldantwoord</p><div class="ans g">${inline(q.voorbeeld, td)}</div>${q.beoordeling ? `<p class="lbl">Beoordeling</p><div class="ans">${q.beoordeling.split("\n").map(l => `<div>${inline(l.replace(/^- /, ""), td)}</div>`).join("")}</div>` : ""}` : ""}
+      ${q && q.uitleg ? `<p class="lbl">Uitleg</p><div class="ex">${inline(q.uitleg, td)}</div>` : ""}</article>`;
+  };
+  const seg = (v, l) => `<button data-act="set" data-key="pf" data-val="${v}" aria-pressed="${String(filt === v)}">${l}</button>`;
+  const toon = rows.filter(r => filt === "alle" || (filt === "fout" ? r.res === "fout" || r.res === "deels" : r.res === "nog na te kijken"));
+  const html = `<div class="card tscore" style="margin:0 0 12px"><div>${scoreRegel}</div><p class="sn" style="margin:6px 0 0">${count("goed")} goed · ${count("deels")} deels · ${count("fout")} fout${open.length ? " · " + count("nog na te kijken") + " nog na te kijken" : ""}${niet ? " · " + niet + " niet beantwoord" : ""}</p></div>
+    ${td && !zelfde ? `<div class="tbanner" style="margin:0 0 12px"><b>De toets is veranderd</b><span>Deze poging is gemaakt met versie ${esc(f.toetsversie)}, de toets is nu versie ${esc(td.fm.versie)}. De vragen zijn daarom niet getoond; je ziet wat er in de poging is vastgelegd.</span></div>` : !td ? `<div class="tbanner" style="margin:0 0 12px"><b>Toets niet gevonden</b><span>De vragen van deze poging konden niet worden opgehaald.</span></div>` : ""}
+    <div class="seg" style="margin:0 0 10px" role="group" aria-label="Filter">${seg("alle", "Alles")}${seg("fout", "Fout of deels")}${open.length ? seg("open", "Nog na te kijken") : ""}</div>
+    <div class="stack qlist">${toon.map(rij).join("") || '<div class="empty">Niets in dit filter.</div>'}</div>`;
+  return { html, feedback };
+}
 function viewDoc(d, scope) {
   const f = d.fm, isTopic = S.topics.includes(d);
   let head = "", tail = "";
@@ -1154,19 +1227,20 @@ function viewDoc(d, scope) {
   } else if (d.section === "7-toetsen") {
     const t = toetsData().find(x => d.path.startsWith("7-toetsen/" + x.folder + "/"));
     if (/\/toets\.md$/.test(d.path) && t) {
-      head = `${tBtn(t)}<div class="card" style="margin:14px 0">${spark(t.scores) || '<span class="sn">Nog geen pogingen</span>'}${themeList(t)}</div>
+      head = `${tBtn(t)}<div class="card" style="margin:14px 0">${scoreBars(t)}${themeList(t)}</div>
         ${t.pogingen.length ? `<h2 class="sec" style="margin-top:8px">Pogingen</h2><div class="card pad0 list" style="margin-bottom:20px">${t.pogingen.slice().reverse().map(p => {
           const v = parseFloat(String(p.fm.percentage).replace(",", "."));
-          return `<a class="row" href="#${p.slug}"><span class="main"><span class="t">${esc(fmtDate(p.fm.datum, true))}</span><br><span class="m">${esc(p.fm.status || "")}${p.fm.duur ? " · " + esc(p.fm.duur) + " min" : ""}${!isFinite(v) && p.fm.score_automatisch !== "" && p.fm.score_automatisch != null ? " · automatisch " + esc(p.fm.score_automatisch) : ""}</span></span>
+          return `<a class="row" href="#${p.slug}"><span class="main"><span class="t">${esc(fmtDate(p.fm.datum, true))}</span><br><span class="m">${esc(p.fm.status || "")}${p.fm.duur ? " · " + esc(fmtDuur(p.fm.duur)) : ""}${!isFinite(v) && p.fm.score_automatisch !== "" && p.fm.score_automatisch != null ? " · automatisch " + esc(p.fm.score_automatisch) : ""}</span></span>
             ${isFinite(v) ? `<span class="bar"><b style="width:${Math.max(0, Math.min(100, v))}%"></b></span><span class="pct">${Math.round(v)}%</span>` : '<span class="flag">nakijken</span>'}</a>`; }).join("")}</div>` : ""}`;
     } else if (/pogingen\//.test(d.path)) {
-      head = `<div class="card" style="margin:14px 0"><dl class="kv">${factRow("Datum", esc(fmtDate(f.datum, true)))}${factRow("Score", f.score !== "" && f.score != null ? esc(f.score) + (f.maximaal ? " van " + esc(f.maximaal) : "") : "")}${factRow("Automatisch", f.score_automatisch !== "" && f.score_automatisch != null ? esc(f.score_automatisch) : "")}${factRow("Percentage", f.percentage !== "" && f.percentage != null ? esc(f.percentage) + "%" : "")}${factRow("Status", esc(f.status))}${factRow("Toetsversie", esc(f.toetsversie))}</dl></div>
+      head = `<div class="card" style="margin:14px 0"><dl class="kv">${factRow("Datum", esc(fmtDate(f.datum, true)))}${factRow("Duur", f.duur !== "" && f.duur != null ? esc(fmtDuur(f.duur)) : "")}${factRow("Score", f.score !== "" && f.score != null ? esc(f.score) + (f.maximaal ? " van " + esc(f.maximaal) : "") : "")}${factRow("Automatisch", f.score_automatisch !== "" && f.score_automatisch != null ? esc(f.score_automatisch) : "")}${factRow("Percentage", f.percentage !== "" && f.percentage != null ? esc(f.percentage) + "%" : "")}${factRow("Status", esc(f.status))}${factRow("Toetsversie", esc(f.toetsversie))}</dl></div>
         ${(f.sterk && f.sterk.length) ? `<p class="sn" style="margin:0 0 6px">Sterk</p><div class="chips" style="margin-bottom:10px">${f.sterk.map(x => `<span class="chip done">${esc(x)}</span>`).join("")}</div>` : ""}
         ${(f.zwak && f.zwak.length) ? `<p class="sn" style="margin:0 0 6px">Zwak</p><div class="chips" style="margin-bottom:10px">${f.zwak.map(x => `<span class="chip open">${esc(x)}</span>`).join("")}</div>` : ""}`;
     }
   }
-  const body = headIds(md(d.body, d));
-  return { html: `<p class="kicker">${esc(where)}</p><h1 class="page">${esc(d.title)}</h1>${head}${doneBar(d)}<article class="prose" style="margin-top:18px">${body.html}</article>${doneBar(d)}${tail}`, parent: parentOf(d), title: kindLabel(d), toc: body.toc.length > 1 ? body.toc : null };
+  const pog = d.type === "poging" && /\/pogingen\//.test(d.path) ? pogingReview(d) : null;
+  const body = headIds(md(pog ? pog.feedback : d.body, d));
+  return { html: `<p class="kicker">${esc(where)}</p><h1 class="page">${esc(d.title)}</h1>${head}${pog ? pog.html : ""}${doneBar(d)}<article class="prose" style="margin-top:18px">${body.html}</article>${doneBar(d)}${tail}`, parent: parentOf(d), title: kindLabel(d), toc: body.toc.length > 1 ? body.toc : null };
 }
 
 /* ---------- toetsen maken ---------- */
@@ -1203,7 +1277,7 @@ function parseToets(d) {
     }
     q.stem = stem.join("\n").trim();
     q.thema = q.f.Thema || ""; q.uitleg = q.f.Uitleg || "";
-    const on = (q.f.Onderwerp || "").match(/\[([^\]]+)\]/); q.onderwerp = on ? on[1] : (q.f.Onderwerp || "");
+    const on = (q.f.Onderwerp || "").match(/\[([^\]]+)\](?:\(([^)\s]+)\))?/); q.onderwerp = on ? on[1] : (q.f.Onderwerp || ""); q.onderwerpPad = on && on[2] ? on[2] : "";
     q.beoordeling = q.f.Beoordeling || ""; q.voorbeeld = q.f.Voorbeeldantwoord || "";
     if (q.type === "waar-onwaar") q.opties = [{ k: "waar", t: "Waar" }, { k: "onwaar", t: "Onwaar" }];
     if (q.type === "meerdere-juist") q.juist = (q.f.Antwoord || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -1330,7 +1404,7 @@ function tResult(t, st) {
   return `<h1 class="page">Resultaat</h1>${banner}
     <section class="card tscore"><div class="big">${nl(sc)}<small> van ${nl(mx)}</small></div><div class="sub">automatisch nagekeken</div>
       ${open.length ? `<p class="sn" style="margin:10px 0 0">${open.length} open ${open.length === 1 ? "vraag" : "vragen"} (${nl(openMax)} punten) ${open.length === 1 ? "wordt" : "worden"} later door Claude nagekeken. Totaal te halen: ${nl(u.maximaal)}.</p>` : ""}
-      <p class="sn" style="margin:6px 0 0">${rows.filter(r => r.res === "goed").length} goed · ${rows.filter(r => r.res === "deels").length} deels · ${rows.filter(r => r.res === "fout").length} fout · ${u.duur} min</p></section>
+      <p class="sn" style="margin:6px 0 0">${rows.filter(r => r.res === "goed").length} goed · ${rows.filter(r => r.res === "deels").length} deels · ${rows.filter(r => r.res === "fout").length} fout · ${esc(fmtDuur(u.duur))}</p></section>
     <div class="seg" style="margin:14px 0 10px">${seg("alle", "Alles")}${seg("fout", "Fout of deels")}${open.length ? seg("open", "Open") : ""}</div>
     <div class="stack qlist">${show.map(r => `<article class="card qres">
       <div class="qh"><b>${r.id}</b><span class="chip ${chipCls(r)}">${esc(r.res)}</span><span class="pts">${nl(r.pts)} van ${nl(r.max)}</span></div>
