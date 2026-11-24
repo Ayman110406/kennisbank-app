@@ -427,7 +427,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-19T19:31Z";
+const BUILD = "2026-11-24T18:52Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -671,6 +671,20 @@ function aDoc(d) {
   }
   return (d._a = a);
 }
+/* inbox: elke lijstregel zonder inspringing onder "## Open" is één item (tot de volgende kop; zonder die kop het hele bestand). Ingesprongen regels horen bij het item erboven. */
+function inboxItems(text) {
+  let lines = String(text).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "").split(/\r?\n/);
+  const i0 = lines.findIndex(l => /^##\s+open\s*$/i.test(l));
+  if (i0 >= 0) { lines = lines.slice(i0 + 1); const e = lines.findIndex(l => /^#{1,2}\s/.test(l)); if (e >= 0) lines = lines.slice(0, e); }
+  const items = []; let cur = null;
+  for (const l of lines) {
+    const m = l.match(/^(?:[-*]|\d+[.)])\s+(.*)$/);
+    if (m) { const c = m[1].match(/^\[([ xX])\]\s*(.*)$/); cur = { klaar: !!c && c[1] !== " ", tekst: c ? c[2] : m[1] }; items.push(cur); }
+    else if (/^#{1,6}\s/.test(l)) cur = null;
+    else if (cur && l.trim()) cur.tekst += "\n" + l.trim();
+  }
+  return items;
+}
 function aandachtData() {
   if (S.ap) return S.ap;
   const todos = [], perDoc = new Map(), per = new Map();
@@ -683,8 +697,9 @@ function aandachtData() {
   for (const d of S.docs) { if (/(^|\/)README\.md$/.test(d.path)) continue; for (const k of [normNaam(d.title), normNaam(d.path.split("/").pop().replace(/\.md$/i, ""))]) if (k && !bestaat.has(k)) bestaat.set(k, d); }
   const gaten = [...per.entries()].map(([sleutel, e]) => ({ sleutel, naam: [...e.w.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0][0], aantal: e.aantal, docs: [...e.docs], bestaatAls: bestaat.get(sleutel) || null }))
     .sort((x, y) => y.aantal - x.aantal || x.sleutel.localeCompare(y.sleutel, "nl"));
-  const txt = S.inbox ? S.inbox.text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "").replace(/^\s*# .*\n/, "") : "";
-  const inbox = { bestaat: !!S.inbox, pad: S.inbox ? S.inbox.path : INBOX_PATHS[0], tekst: txt, open: (txt.match(/^\s*[-*]\s+\[ \]/gm) || []).length, klaar: (txt.match(/^\s*[-*]\s+\[[xX]\]/gm) || []).length };
+  const items = inboxItems(S.inbox ? S.inbox.text : "");
+  const open = items.filter(i => !i.klaar).length;
+  const inbox = { bestaat: !!S.inbox, pad: S.inbox ? S.inbox.path : INBOX_PATHS[0], items, open, klaar: items.length - open };
   return (S.ap = { todos, perDoc: [...perDoc.entries()], gaten, inbox, aantal: todos.length + inbox.open });
 }
 
@@ -1101,13 +1116,13 @@ function apGaten(a) {
 function apInbox(a) {
   const ib = a.inbox;
   if (!ib.bestaat) return `<div class="empty"><b>Geen inbox gevonden</b>Er staat geen inbox op <code>${esc(ib.pad)}</code>.</div>`;
-  const html = ib.tekst.trim() ? md(ib.tekst, { path: ib.pad }) : "";
-  if (!html.trim()) return '<div class="empty"><b>De inbox is leeg</b></div>';
-  return `<p class="sn">Losse notities uit <code>${esc(ib.pad)}</code>, alleen om te lezen.</p><div class="card"><div class="prose" style="max-width:none">${html}</div></div>`;
+  if (!ib.items.length) return '<div class="empty"><b>Inbox leeg</b></div>';
+  const rij = i => `<div class="card"${i.klaar ? ' style="opacity:.6"' : ""}>${i.tekst.split("\n").map((r, k) => `<div style="line-height:1.5${k ? ";color:var(--muted)" : ""}">${inline(r, { path: ib.pad })}</div>`).join("")}</div>`;
+  return `<h2 class="sec">Inbox (${ib.open} open)</h2><p class="sn">Losse notities uit <code>${esc(ib.pad)}</code>, alleen om te lezen.</p><div class="stack" style="gap:8px">${ib.items.map(rij).join("")}</div>`;
 }
 function viewAandacht() {
   const a = aandachtData(), tab = UI.ap || "todos";
-  const tabs = [["todos", "Open TODO's", a.todos.length], ["gaten", "Kennisgaten", a.gaten.length], ["inbox", "Inbox", a.inbox.open + " open"]];
+  const tabs = [["todos", "Open TODO's", a.todos.length], ["gaten", "Kennisgaten", a.gaten.length], ["inbox", "Inbox", a.inbox.open ? a.inbox.open + " open" : "leeg"]];
   const secties = { todos: apTodos(a), gaten: apGaten(a), inbox: apInbox(a) };
   let body;
   body = `<div class="seg ap-seg" role="group" aria-label="Onderdeel">${tabs.map(([k, l, n]) => `<button data-act="set" data-key="ap" data-val="${k}" aria-pressed="${String(tab === k)}">${l} <span class="apn">${n}</span></button>`).join("")}</div><div style="margin-top:14px">${secties[tab] || secties.todos}</div>`;
