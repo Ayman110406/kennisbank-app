@@ -1,4 +1,52 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Kennisbank"><meta name="referrer" content="no-referrer"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body><title>Kennisbank Lezer</title>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Kennisbank"><meta name="referrer" content="no-referrer"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}/* overig */
+.ov-leeg { color: var(--muted); font-style: italic; margin: 0; }
+.ov-kaarten { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+.ov-kaart { display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; color: var(--ink); text-decoration: none; }
+.ov-kaart:hover { border-color: var(--accent); }
+.ov-kt { font-weight: 650; font-size: 17px; } .ov-kx { color: var(--muted); font-size: 14px; }
+.ov-pillen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
+.chip.ov-stil { color: var(--muted); }
+.ov-readme { margin: 14px 0 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.ov-readme > summary { cursor: pointer; padding: 11px 16px; font-weight: 600; color: var(--muted); }
+.ov-readme > .prose { padding: 0 16px 8px; }
+.ov-blokken { display: grid; gap: 12px; }
+.ov-blok { --t: var(--muted); --tb: var(--surface); background: var(--tb); border: 1px solid var(--line); border-left: 4px solid var(--t); border-radius: 12px; padding: 12px 14px 14px; min-width: 0; }
+.ov-amber { --t: var(--open); --tb: var(--open-bg); } .ov-groen { --t: var(--done); --tb: var(--done-bg); } .ov-grijs { --t: var(--muted); --tb: var(--chip); }
+.ov-woord, .ov-neutraal { --t: var(--line); } .ov-doel { --t: var(--accent); }
+.ov-bk { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.ov-woord .ov-n, .ov-neutraal .ov-n { color: var(--muted); }
+.ov-bk h2 { margin: 0; font-size: 16px; } .ov-n { font-size: 13px; font-weight: 600; color: var(--t); }
+.ov-rijen { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ov-rij { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; min-width: 0; }
+.ov-punt { font-weight: 600; overflow-wrap: anywhere; } .ov-velden { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.ov-vb { margin-top: 6px; font-size: 14.5px; color: var(--muted); overflow-wrap: anywhere; }
+.ov-fout { text-decoration: line-through; } .ov-beter { color: var(--done); font-weight: 600; } .ov-pijl { opacity: .7; }
+.ov-tekst > :first-child { margin-top: 0; } .ov-tekst > :last-child { margin-bottom: 0; }
+.ov-dbadge { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 10px; }
+.ov-dl { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); } .ov-dn { font-weight: 600; }
+.ov-th { display: block; clear: both; margin: 14px 0 6px; font-size: 15px; }
+.ov-tw { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.ov-tw table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ov-tw th, .ov-tw td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ov-tw tbody tr:last-child td { border-bottom: 0; }
+.prose.ov-intro, .prose.ov-tekst { font-family: var(--f-ui); font-size: 15.5px; line-height: 1.55; }
+.ov-sparks { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 10px; }
+.ov-spark { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; color: var(--muted); } .ov-spark svg { display: block; color: var(--accent); } .ov-spark b { color: var(--ink); }
+.ov-intro { color: var(--muted); margin: 0 0 12px; }
+.ov-format { margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--code-bg); }
+.ov-format > summary { cursor: pointer; padding: 7px 12px; font-size: 14px; color: var(--muted); }
+.ov-format pre { margin: 0; padding: 4px 12px 12px; overflow-x: auto; font-family: var(--f-mono); font-size: 12.5px; }
+.ov-lijn { list-style: none; margin: 0; padding: 0 0 0 22px; position: relative; }
+.ov-lijn::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.ov-entry { position: relative; margin: 0 0 12px; padding: 11px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+.ov-entry::before { content: ""; position: absolute; left: -22px; top: 16px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.ov-ek { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: 6px; }
+.ov-ed { font-size: 13px; font-weight: 600; color: var(--accent); } .ov-ek h3 { margin: 0; font-size: 16px; }
+.ov-kv { display: grid; grid-template-columns: minmax(110px, 170px) 1fr; gap: 3px 12px; margin: 0; }
+.ov-kv dt { color: var(--muted); font-size: 14px; } .ov-kv dd { margin: 0; overflow-wrap: anywhere; } .ov-kv dd.ov-vol { grid-column: 1 / -1; }
+@media (max-width: 640px) { .ov-kv { grid-template-columns: 1fr; } .ov-kv dd { margin-bottom: 6px; } .ov-blok { padding: 10px 11px 12px; } }
+@media (min-width: 900px) { .desk main.pg-overig { max-width: 860px; } }
+</style></head><body><title>Kennisbank Lezer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -427,7 +475,7 @@ textarea#tin { resize: vertical; line-height: 1.45; }
 
 <script>
 const SNAPSHOT = /*__SNAPSHOT__*/null;
-const BUILD = "2026-11-24T18:52Z";
+const BUILD = "2026-11-27T18:13Z";
 const APP_REPO = "Ayman110406/kennisbank-app";
 const DEFAULT_REPO = "Ayman110406/kennisbank";
 const SECTIONS = { "1-kennis": "kennis", "2-technologie": "technologie", "3-werkwijzen": "werkwijze" };
@@ -967,10 +1015,176 @@ function viewProjecten() {
   const total = S.docs.filter(d => /\/project\.md$/.test(d.path)).length;
   return { html: `<h1 class="page">Projecten</h1><p class="sub">${total} projecten, nieuwste eerst</p>${renderNode(root, 0)}` };
 }
+/* ---------- overig: collecties, onderdelen met tabs, tijdlijn en blokken (zelfde regels als kennisbank-site, src/lib/kennisbank/overig.ts) ---------- */
+const OV = "8-overig";
+const ovRegels = b => String(b).replace(/\r/g, "").split("\n");
+const ovTrim = r => r.join("\n").replace(/^\s*\n/, "").replace(/\s+$/, "");
+function ovZonderH1(r) { let f = false; for (let i = 0; i < r.length; i++) { if (/^\s*```/.test(r[i])) f = !f; if (!f && /^#\s+/.test(r[i])) return r.slice(0, i).concat(r.slice(i + 1)); } return r; }
+function ovSplit(r, n) {
+  const re = new RegExp("^#{" + n + "}\\s+(.*?)\\s*#*\\s*$"), uit = [{ kop: null, regels: [] }]; let f = false;
+  for (const l of r) { if (/^\s*```/.test(l)) f = !f; const m = f ? null : re.exec(l); if (m) uit.push({ kop: m[1], regels: [] }); else uit[uit.length - 1].regels.push(l); }
+  return uit;
+}
+const OV_SCH = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/, ovCel = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+function ovTabel(r) {
+  for (let i = 0; i + 1 < r.length; i++) if (/^\s*\|.*\|\s*$/.test(r[i]) && OV_SCH.test(r[i + 1])) {
+    let j = i + 2; const rijen = []; while (j < r.length && /^\s*\|.*\|\s*$/.test(r[j])) rijen.push(ovCel(r[j++]));
+    return { tabel: { kop: ovCel(r[i]), rijen: rijen.filter(x => x.some(c => c)) }, rest: r.slice(0, i).concat(r.slice(j)) };
+  }
+  return { tabel: null, rest: r };
+}
+/* een rij: "punt | label: waarde | ... | voorbeeld" */
+function ovRij(item) {
+  const delen = item.split(/\s+\|\s+/).map(x => x.trim()).filter(Boolean), rij = { punt: delen[0] || "", velden: [], voorbeeld: [] };
+  for (const d of delen.slice(1)) {
+    const m = /^([^:→]{2,32}?):\s+(.+)$/.exec(d) || /^([^:→]{2,32}?):$/.exec(d);
+    if (!m) rij.voorbeeld.push(d); else if (/^voorbeeld$/i.test(m[1])) rij.voorbeeld.push(m[2] || ""); else rij.velden.push({ label: m[1], waarde: m[2] || "" });
+  }
+  return rij;
+}
+function ovLijst(r) {
+  const items = [], rest = []; let f = false, cur = -1;
+  for (const l of r) {
+    if (/^\s*```/.test(l)) f = !f; const m = f ? null : /^[-*]\s+(.*)$/.exec(l);
+    if (m) { items.push(m[1]); cur = items.length - 1; }
+    else if (cur >= 0 && !f && /^\s+\S/.test(l)) items[cur] += " " + l.trim();
+    else { if (!l.trim() || !/^\s/.test(l)) cur = -1; rest.push(l); }
+  }
+  return { items, rest, allesPijp: items.length > 0 && items.every(i => /\s\|\s/.test(i)) };
+}
+function ovToon(t) {
+  t = t.toLowerCase();
+  return /actief|aandacht|let op/.test(t) ? "amber" : /beter|goed gaat|vooruit/.test(t) ? "groen" : /opgelost|afgerond|klaar/.test(t) ? "grijs" : /woord|uitdrukking|onthouden/.test(t) ? "woord" : /doel|plan/.test(t) ? "doel" : "neutraal";
+}
+function ovSectie(titel, r) {
+  const toon = ovToon(titel), tabellen = [], proza = [];
+  for (const d of ovSplit(r, 3)) {
+    if (d.kop === null) { proza.push(...d.regels); continue; }
+    const { tabel, rest } = ovTabel(d.regels);
+    if (tabel) tabellen.push({ titel: d.kop, tabel });
+    if (ovTrim(rest)) proza.push("", "### " + d.kop, ...rest); else if (!tabel) tabellen.push({ titel: d.kop, tabel: { kop: [], rijen: [] } });
+  }
+  const los = ovTabel(proza); if (los.tabel) tabellen.unshift({ titel: "", tabel: los.tabel });
+  const lijst = ovLijst(los.rest), alsRijen = lijst.items.length > 0 && (lijst.allesPijp || ["amber", "groen", "grijs", "woord"].includes(toon));
+  const rijen = alsRijen ? lijst.items.map(ovRij).filter(x => x.punt && !/^\[[^\]]*\]$/.test(x.punt)) : [];
+  const tekst = ovTrim(alsRijen ? lijst.rest : los.rest);
+  return { titel, toon, tekst, rijen, tabellen, leeg: !rijen.length && !tekst && tabellen.every(t => !t.tabel.rijen.length) };
+}
+function ovOverzicht(body) { const d = ovSplit(ovZonderH1(ovRegels(body)), 2); return { intro: ovTrim(d[0].regels), secties: d.slice(1).map(x => ovSectie(x.kop || "", x.regels)) }; }
+/* een tijdlijn: elke "## jjjj-mm-dd: titel" is een entry, nieuwste eerst; codeblokken in de inleiding (het format) worden ingeklapt */
+function ovEntries(body) {
+  const d = ovSplit(ovZonderH1(ovRegels(body)), 2), entries = [], extra = [];
+  for (const x of d.slice(1)) { const m = /^(\d{4}-\d{2}-\d{2})\s*(?:[:\-–—]\s*)?(.*)$/.exec(x.kop || ""); if (m) entries.push({ datum: m[1], titel: m[2].trim(), tekst: ovTrim(x.regels) }); else extra.push("## " + x.kop, ...x.regels); }
+  const formats = [], intro = []; let fence = null;
+  for (const l of d[0].regels.concat(extra)) { if (/^\s*```/.test(l)) { if (fence) { formats.push(fence.join("\n")); fence = null; } else fence = []; } else if (fence) fence.push(l); else intro.push(l); }
+  entries.sort((a, b) => b.datum.localeCompare(a.datum));
+  return { intro: ovTrim(intro).replace(/\n*Format per entry:?\s*$/i, "").trim(), formats, entries };
+}
+/* kolommen met een schaal in de kop, zoals "Vloeiend (1-5)", krijgen een lijntje zodra er 2 of meer metingen zijn */
+function ovScores(t) {
+  if (t.rijen.length < 2) return [];
+  const uit = [], num = s => parseFloat(String(s).replace(",", "."));
+  t.kop.forEach((k, kol) => {
+    const m = /\((\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\)/.exec(k); if (!m) return;
+    const w = t.rijen.map(r => num(r[kol] || "")).filter(isFinite); if (w.length < 2) return;
+    uit.push({ titel: k.replace(/\s*\(.*\)\s*$/, ""), min: num(m[1]), max: num(m[2]), w });
+  });
+  return uit;
+}
+/* structuur: collectie = submap van 8-overig met een README; onderdeel = submap van een collectie met bestanden */
+function ovStructuur() {
+  const per = {}; for (const d of S.docs) if (d.section === OV) (per[d.folder] = per[d.folder] || []).push(d);
+  const isReadme = d => /(^|\/)README\.md$/.test(d.path), cols = [];
+  for (const f of Object.keys(per).sort()) {
+    if (f.split("/").length !== 2) continue; const readme = per[f].find(isReadme); if (!readme) continue;
+    const onderdelen = Object.keys(per).filter(g => g.startsWith(f + "/") && g.split("/").length === 3).sort().map(g => ({ rel: g, naam: g.split("/")[2], docs: per[g].filter(d => !isReadme(d)) })).filter(o => o.docs.length);
+    cols.push({ rel: f, naam: f.split("/")[1], readme, docs: per[f].filter(d => !isReadme(d)), onderdelen });
+  }
+  return { cols, losse: (per[OV] || []).filter(d => !isReadme(d)) };
+}
+const OV_TABS = ["overzicht", "ai-feedback", "eigen-feedback"], OV_LABEL = { overzicht: "Overzicht", "ai-feedback": "AI-feedback", "eigen-feedback": "Eigen feedback" };
+const ovNaam = s => { s = s.replace(/^\d{4}-\d{2}-/, "").replace(/^\d+-/, "").replace(/[-_]+/g, " ").trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
+function ovTabs(o) {
+  const rang = k => OV_TABS.indexOf(k) >= 0 ? OV_TABS.indexOf(k) : OV_TABS.length;
+  return o.docs.map(d => { const k = d.path.split("/").pop().replace(/\.md$/, ""); return { k, label: OV_LABEL[k] || ovNaam(k), d, feedback: /feedback|logboek|entries/i.test(k) || ovEntries(d.body).entries.length > 0 }; })
+    .sort((a, b) => rang(a.k) - rang(b.k) || a.k.localeCompare(b.k, "nl"));
+}
+function ovSamen(o) {
+  let laatste = "", actief = null;
+  for (const t of ovTabs(o)) { if (t.feedback) for (const e of ovEntries(t.d.body).entries) { if (e.datum > laatste) laatste = e.datum; } else for (const s of ovOverzicht(t.d.body).secties) if (s.toon === "amber") actief = (actief || 0) + s.rijen.length; }
+  return { laatste, actief };
+}
+function ovZin(readme) {
+  const a = ovTrim(ovZonderH1(ovRegels(readme.body))).split(/\n\s*\n/).find(x => x.trim() && !/^(#|[-*|>`]|\d+\.)/.test(x.trim()));
+  if (!a) return ""; const plat = a.replace(/\s+/g, " ").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "").trim(), m = /^(.+?[.!?])(\s|$)/.exec(plat);
+  return m ? m[1] : plat;
+}
+const ovLeeg = '<p class="ov-leeg">Nog geen entries</p>';
+function ovKaart(href, titel, tekst, pillen) { return `<a class="ov-kaart" href="#${href}"><span class="ov-kt">${esc(titel)}</span>${tekst ? `<span class="ov-kx">${esc(tekst)}</span>` : ""}<span class="ov-pillen">${pillen}</span></a>`; }
+function ovLijstHtml(docs, titel) {
+  return docs.length ? `<h2 class="sec">${titel}</h2><div class="card pad0 list">${docs.map(d => `<a class="row" href="#${d.slug}"><span class="main"><span class="t">${esc(d.title)}</span></span><span class="m">${esc(fmtDate(d.fm.bijgewerkt || d.fm.aangemaakt))}</span></a>`).join("")}</div>` : "";
+}
+function ovReadme(readme, label) { return `<details class="ov-readme"><summary>${label}</summary><div class="prose">${md(readme.body.replace(/^\s*# .*\n/, ""), readme)}</div></details>`; }
+function ovSpark(k) {
+  const B = 84, H = 24, P = 3, br = k.max - k.min || 1;
+  const p = k.w.map((w, i) => [P + i * (B - 2 * P) / (k.w.length - 1), H - P - (Math.min(k.max, Math.max(k.min, w)) - k.min) / br * (H - 2 * P)]), l = p[p.length - 1];
+  return `<div class="ov-spark"><span>${esc(k.titel)}</span><svg width="${B}" height="${H}" viewBox="0 0 ${B} ${H}" role="img" aria-label="${esc(k.titel)}: van ${k.w[0]} naar ${k.w[k.w.length - 1]}"><polyline points="${p.map(x => x.map(n => n.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${l[0].toFixed(1)}" cy="${l[1].toFixed(1)}" r="2.6" fill="currentColor"/></svg><span><b>${k.w[k.w.length - 1]}</b> nu · begon op ${k.w[0]}</span></div>`;
+}
+function ovTabelHtml(t) {
+  if (!t.tabel.rijen.length) return (t.titel ? `<h3 class="ov-th">${esc(t.titel)}</h3>` : "") + ovLeeg;
+  const sp = ovScores(t.tabel);
+  return `${t.titel ? `<h3 class="ov-th">${esc(t.titel)}</h3>` : ""}<div class="ov-tw"><table><thead><tr>${t.tabel.kop.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${t.tabel.rijen.map(r => `<tr>${t.tabel.kop.map((c, j) => `<td>${esc(r[j] || "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${sp.length ? `<div class="ov-sparks">${sp.map(ovSpark).join("")}</div>` : ""}`;
+}
+function ovVoorbeeld(v, d) {
+  const [oud, ...rest] = v.split(/\s+→\s+/);
+  return rest.length ? `<div class="ov-vb"><span class="ov-fout">${inline(oud, d)}</span> <span class="ov-pijl">→</span> <span class="ov-beter">${inline(rest.join(" → "), d)}</span></div>` : `<div class="ov-vb">${inline(v, d)}</div>`;
+}
+function ovBlok(s, d) {
+  let tekst = s.tekst, badge = "";
+  const m = s.toon === "doel" && /^Doel:\s*\[([^\]]+)\]\(([^)\s]+)\)[^\n]*(\n|$)/m.exec(tekst);
+  if (m) {
+    const g = S.byPath[resolvePath(d.path, m[2].split("#")[0])];
+    if (g && g.type === "doel") {
+      badge = `<div class="ov-dbadge"><span class="ov-dl">Doel</span><a class="ov-dn" href="#${g.slug}">${esc(g.title)}</a>${statusChip(g)}${g.fm.streefdatum ? chip("streefdatum " + fmtDate(g.fm.streefdatum)) : ""}${g.fm.behaald ? chip("behaald " + fmtDate(g.fm.behaald), "done") : ""}</div>`;
+      tekst = (tekst.slice(0, m.index) + tekst.slice(m.index + m[0].length)).replace(/^\s+/, "");
+    }
+  }
+  const rijen = s.rijen.map(r => `<li class="ov-rij"><div class="ov-punt">${inline(r.punt, d)}</div>${r.velden.length ? `<div class="ov-velden">${r.velden.map(v => `<span class="chip">${esc(v.label)}${v.waarde ? ": <b>" + esc(v.waarde) + "</b>" : ""}</span>`).join("")}</div>` : ""}${r.voorbeeld.map(v => ovVoorbeeld(v, d)).join("")}</li>`).join("");
+  return `<section class="ov-blok ov-${s.toon}"><div class="ov-bk"><h2>${esc(s.titel)}</h2>${s.rijen.length ? `<span class="ov-n">${s.rijen.length}</span>` : ""}</div>${badge}${s.leeg && !badge ? ovLeeg : ""}${tekst ? `<div class="prose ov-tekst">${md(tekst, d)}</div>` : ""}${rijen ? `<ul class="ov-rijen">${rijen}</ul>` : ""}${s.tabellen.map(ovTabelHtml).join("")}</section>`;
+}
+function ovEntry(e, d) {
+  const regels = e.tekst.split("\n").filter(l => l.trim());
+  const body = regels.length ? `<dl class="ov-kv">${regels.map(l => { const b = l.replace(/^\s*[-*]\s+/, ""), m = /^([^:]{2,40}):\s+(.+)$/.exec(b); return m && /^\s*[-*]\s/.test(l) ? `<dt>${esc(m[1])}</dt><dd>${inline(m[2], d)}</dd>` : `<dd class="ov-vol">${inline(b, d)}</dd>`; }).join("")}</dl>` : '<p class="ov-leeg">Nog geen details.</p>';
+  return `<li class="ov-entry"><div class="ov-ek"><span class="ov-ed">${esc(fmtDate(e.datum))}</span>${e.titel ? `<h3>${inline(e.titel, d)}</h3>` : ""}</div>${body}</li>`;
+}
+function viewOverig(h, tab) {
+  const st = ovStructuur(), delen = h.split("/"), col = delen[1] && st.cols.find(c => c.naam === delen[1]), ond = col && delen[2] && col.onderdelen.find(o => o.naam === delen[2]);
+  if (delen[1] && !col || delen[2] && !ond) return { html: '<div class="empty"><b>Pagina niet gevonden</b><a href="#overig">Naar Overig</a></div>', parent: "v-meer", title: "Overig" };
+  if (ond) {
+    const tabs = ovTabs(ond), act = tabs.find(t => t.k === tab) || tabs[0];
+    let inh;
+    if (act.feedback) {
+      const x = ovEntries(act.d.body);
+      inh = `${x.intro ? `<div class="prose ov-intro">${md(x.intro, act.d)}</div>` : ""}${x.formats.map(f => `<details class="ov-format"><summary>Format per entry</summary><pre><code>${esc(f)}</code></pre></details>`).join("")}${x.entries.length ? `<ol class="ov-lijn">${x.entries.map(e => ovEntry(e, act.d)).join("")}</ol>` : ovLeeg}`;
+    } else {
+      const x = ovOverzicht(act.d.body);
+      inh = `${x.intro ? `<div class="prose ov-intro">${md(x.intro, act.d)}</div>` : ""}${x.secties.length ? `<div class="ov-blokken">${x.secties.map(s => ovBlok(s, act.d)).join("")}</div>` : ovLeeg}`;
+    }
+    const knoppen = tabs.length > 1 ? `<div class="seg ap-seg" role="group" aria-label="Onderdeel">${tabs.map(t => `<button data-act="set" data-key="ovt" data-val="${esc(t.k)}" aria-pressed="${String(t === act)}">${esc(t.label)}</button>`).join("")}</div>` : "";
+    return { html: `<h1 class="page">${esc(ovNaam(ond.naam))}</h1>${knoppen}<div style="margin-top:14px">${inh}</div><p class="sn" style="margin-top:22px"><a href="#${act.d.slug}">Open ${esc(act.k)}.md als gewone pagina</a></p>`, parent: "overig/" + col.naam, title: ovNaam(ond.naam), crumb: ovNaam(ond.naam), wide: true };
+  }
+  if (col) {
+    const kaarten = col.onderdelen.map(o => { const s = ovSamen(o); return ovKaart("overig/" + col.naam + "/" + o.naam, ovNaam(o.naam), "", `<span class="chip${s.laatste ? "" : " ov-stil"}">${s.laatste ? "laatste entry " + esc(fmtDate(s.laatste)) : "Nog geen entries"}</span>${s.actief === null ? "" : `<span class="chip${s.actief ? " open" : " ov-stil"}">${s.actief} ${s.actief === 1 ? "actief aandachtspunt" : "actieve aandachtspunten"}</span>`}`); }).join("");
+    return { html: `<h1 class="page">${esc(col.readme.title)}</h1>${ovReadme(col.readme, "Over deze collectie")}<h2 class="sec">Onderdelen</h2>${kaarten ? `<div class="ov-kaarten">${kaarten}</div>` : ovLeeg}${ovLijstHtml(col.docs, "Bestanden")}`, parent: "overig", title: col.readme.title, crumb: col.readme.title, wide: true };
+  }
+  const kaarten = st.cols.map(c => ovKaart("overig/" + c.naam, c.readme.title, ovZin(c.readme), `<span class="chip">${c.onderdelen.length} ${c.onderdelen.length === 1 ? "onderdeel" : "onderdelen"}</span>`)).join("");
+  return { html: `<h1 class="page">Overig</h1><p class="sub">Collecties en losse dingen zonder andere plek.</p>${kaarten ? `<h2 class="sec">Collecties</h2><div class="ov-kaarten">${kaarten}</div>` : ""}${ovLijstHtml(st.losse, "Losse bestanden")}${!kaarten && !st.losse.length ? ovLeeg : ""}`, parent: "v-meer", title: "Overig", wide: true };
+}
+const ovLabel = p => { const st = ovStructuur(), c = p.split("/")[1] && st.cols.find(x => x.naam === p.split("/")[1]); return c ? c.readme.title : ""; };
 function viewMeer() {
   const item = (h, t, s) => `<a class="row" href="#${h}"><span class="main"><span class="t">${t}</span><br><span class="m">${s}</span></span></a>`;
   return { html: `<h1 class="page">Meer</h1><div class="card pad0 list" style="margin-top:14px">
-    ${item("v-zoek", "Zoeken", "in titels, tags en tekst")}${item("v-aandacht", "Aandachtspunten", "TODO's, kennisgaten en inbox")}${item("v-dagtekst", "Dagtekst", dagLijst().some(x => x.open) ? "1 open dagtekst" : "dagelijkse leestekst met vragen")}${item("v-projecten", "Projecten", "alle projecten als lijst")}${item("v-doelen", "Doelen", "wat ik wil bereiken")}${item("v-logboek", "Logboek", "momentopnames en reflecties")}
+    ${item("v-zoek", "Zoeken", "in titels, tags en tekst")}${item("v-aandacht", "Aandachtspunten", "TODO's, kennisgaten en inbox")}${item("overig", "Overig", "collecties en losse notities")}${item("v-dagtekst", "Dagtekst", dagLijst().some(x => x.open) ? "1 open dagtekst" : "dagelijkse leestekst met vragen")}${item("v-projecten", "Projecten", "alle projecten als lijst")}${item("v-doelen", "Doelen", "wat ik wil bereiken")}${item("v-logboek", "Logboek", "momentopnames en reflecties")}
     ${item("v-toetsen", "Toetsen", "vragen, pogingen en scores")}${item("v-over", "Over de kennisbank en de app", "wijzigingen, versie en voortgang")}${item("v-instellingen", "Instellingen", "weergave en verbinding")}</div>` };
 }
 function snippet(d, words) {
@@ -1240,6 +1454,7 @@ function parentOf(d) {
   if (d.section === "5-doel") return "v-doelen";
   if (d.section === "6-logboek") return "v-logboek";
   if (d.section === "7-toetsen") return "v-toetsen";
+  if (d.section === OV) { const p = d.path.split("/"); return p.length > 2 ? "overig/" + p.slice(1, Math.min(p.length - 1, 3)).join("/") : "overig"; }
   return "v-start";
 }
 function factRow(k, v) { return v === "" || v == null || (Array.isArray(v) && !v.length) ? "" : `<dt>${k}</dt><dd>${v}</dd>`; }
@@ -1761,15 +1976,16 @@ function tabbar(tab) {
 }
 /* ---------- desktop: zijbalk, kruimels, inhoudsopgave en toetsenbord ---------- */
 const DEST1 = [["", "home", "Start", "start"], ["v-leerpad", "path", "Leerpad", "leerpad"], ["v-tijdlijn", "timeline", "Projecttijdlijn", "tijdlijn"], ["v-aandacht", "alert", "Aandachtspunten", "aandacht"]];
-const DEST2 = [["v-projecten", "folder", "Projecten", "projecten"], ["v-doelen", "target", "Doelen", "doelen"], ["v-logboek", "book", "Logboek", "logboek"], ["v-toetsen", "quiz", "Toetsen", "toetsen"], ["v-dagtekst", "book", "Dagtekst", "dagtekst"]];
+const DEST2 = [["v-projecten", "folder", "Projecten", "projecten"], ["v-doelen", "target", "Doelen", "doelen"], ["v-logboek", "book", "Logboek", "logboek"], ["v-toetsen", "quiz", "Toetsen", "toetsen"], ["v-dagtekst", "book", "Dagtekst", "dagtekst"], ["overig", "folder", "Overig", "overig"]];
 const DEST3 = [["v-zoek", "search", "Zoeken", "zoek"], ["v-over", "info", "Over de app", "over"], ["v-instellingen", "gear", "Instellingen", "instellingen"]];
-const PARENT_LABEL = { "v-start": "Start", "v-leerpad": "Leerpad", "v-tijdlijn": "Projecttijdlijn", "v-projecten": "Projecten", "v-dagtekst": "Dagtekst", "v-doelen": "Doelen", "v-logboek": "Logboek", "v-toetsen": "Toetsen" };
+const PARENT_LABEL = { "overig": "Overig", "v-start": "Start", "v-leerpad": "Leerpad", "v-tijdlijn": "Projecttijdlijn", "v-projecten": "Projecten", "v-dagtekst": "Dagtekst", "v-doelen": "Doelen", "v-logboek": "Logboek", "v-toetsen": "Toetsen" };
 function deskActive(h) {
   if (!h) return "start";
   if (VIEWS[h]) return h.slice(2);
   if (h.startsWith("maak-")) return "toetsen";
+  if (h === "overig" || h.startsWith("overig/")) return "overig";
   const d = S.bySlug[h]; if (!d) return "";
-  return SECTIONS[d.section] ? "leerpad" : { "4-projecten": S.projFrom === "projecten" ? "projecten" : "tijdlijn", "5-doel": "doelen", "6-logboek": "logboek", "7-toetsen": "toetsen", "12-dagtekst": "dagtekst" }[d.section] || "";
+  return SECTIONS[d.section] ? "leerpad" : { "4-projecten": S.projFrom === "projecten" ? "projecten" : "tijdlijn", "5-doel": "doelen", "6-logboek": "logboek", "7-toetsen": "toetsen", "12-dagtekst": "dagtekst", "8-overig": "overig" }[d.section] || "";
 }
 function sideHtml(h) {
   const act = deskActive(h), link = ([href, ic, label, key]) => `<a href="#${href}" data-reset="1" ${act === key ? 'aria-current="page"' : ""}>${icon(ic)}${label}${key === "aandacht" && aandachtData().aantal ? `<span class="sidebadge" title="Open TODO's en open inboxitems">${aandachtData().aantal}</span>` : ""}${key === "dagtekst" && dagLijst().some(x => x.open) ? `<span class="sidebadge" title="Open dagtekst">1</span>` : ""}</a>`;
@@ -1782,7 +1998,7 @@ function sideHtml(h) {
 }
 function crumbsHtml(info) {
   if (!info.parent || !info.crumb) return "";
-  const label = PARENT_LABEL[info.parent] || (S.bySlug[info.parent] ? S.bySlug[info.parent].title : "");
+  const label = PARENT_LABEL[info.parent] || ovLabel(info.parent) || (S.bySlug[info.parent] ? S.bySlug[info.parent].title : "");
   return label ? `<nav class="crumbs" aria-label="Kruimelpad"><a href="#${info.parent === "v-start" ? "" : info.parent}">${esc(label)}</a><span>/</span><span>${esc(info.crumb)}</span></nav>` : "";
 }
 let tocTick = 0;
@@ -1819,6 +2035,8 @@ function route() {
     info = VIEWS[h]; tab = info.tab;
     view = { start: viewStart, leerpad: viewLeerpad, projecten: viewProjecten, meer: viewMeer }[h.slice(2)] || ({ tijdlijn: viewTijdlijn, aandacht: viewAandacht, dagtekst: viewDagtekst, zoek: viewZoek, doelen: viewDoelen, logboek: viewLogboek, toetsen: viewToetsen, over: viewOver, instellingen: viewInstellingen }[h.slice(2)]);
     view = view();
+  } else if (h === "overig" || h.startsWith("overig/")) {
+    view = viewOverig(h, new URLSearchParams(full.split("?")[1] || "").get("tab") || UI.ovt); info = { parent: view.parent, title: view.title, crumb: view.crumb }; tab = "meer";
   } else if (h.startsWith("maak-")) {
     { const f0 = decodeURIComponent(h.slice(5)); if (!S.checked[f0] && S.docs.length) { S.checked[f0] = true; tCheckRemote(f0).then(c => { if (c && location.hash === "#" + h) route(); }); } }
     view = viewMaak(decodeURIComponent(h.slice(5))); info = { parent: view.parent, title: view.title, crumb: "Toets maken" }; tab = "meer";
@@ -1826,7 +2044,7 @@ function route() {
     const d = S.bySlug[h]; view = d.section === "12-dagtekst" ? viewDagtekstDoc(d) : viewDoc(d, scope); info = { parent: view.parent, title: view.title, crumb: d.title };
     tab = SECTIONS[d.section] ? "leerpad" : d.section === "4-projecten" ? (S.projFrom === "projecten" ? "meer" : "tijdlijn") : "meer";
   } else { view = { html: '<div class="empty"><b>Pagina niet gevonden</b><a href="#">Naar de start</a></div>' }; info = { parent: "v-start", title: "" }; }
-  const name = !h ? "start" : VIEWS[h] ? h.slice(2) : h.startsWith("maak-") ? "maak" : S.bySlug[h] ? "doc" : "onbekend";
+  const name = !h ? "start" : VIEWS[h] ? h.slice(2) : (h === "overig" || h.startsWith("overig/")) ? "overig" : h.startsWith("maak-") ? "maak" : S.bySlug[h] ? "doc" : "onbekend";
   const toc = view.toc ? `<aside class="toc" aria-label="Op deze pagina"><b>Op deze pagina</b>${view.toc.map(t => `<button class="tl l${t.l}" data-act="toc" data-id="${t.id}">${t.t}</button>`).join("")}</aside>` : "";
   app.innerHTML = sideHtml(h) + topbar(h, info) + `<div class="desk${view.toc ? " read" : ""}"><main class="pg-${name}${view.wide ? " wide" : ""}">${crumbsHtml(info)}${view.html}</main>${toc}</div>` + tabbar(tab);
   const q = $("#q"); if (q && !q.value) q.focus();
